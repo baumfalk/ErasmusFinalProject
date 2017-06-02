@@ -1,36 +1,13 @@
 
 # Introduction ------------------------------------------------------------
 
-
 #Set working directory
 setwd("C:/Users/Arthur/Dropbox/Studie/2016-17 EUR D&B Analytics/Blok 5/Eindopdracht")
 
 rm(list = ls())
 
-#Set libraries
+source("Libraries.R")
 
-library(rjson)
-library(rtimes)
-library(stringr)
-library(RCurl)
-library(XML)
-library(rvest)
-library(tm)
-library(tm.plugin.webmining)
-require(reshape2)
-library(plyr)
-library(dplyr)
-library(magrittr)
-library(coreNLP)
-library(rvest)
-library(tidytext)
-library(topicmodels)
-library(ggplot2)
-library(tidyr)
-library(sentimentr)
-
-#Code om tijd goed te zetten
-Sys.setlocale("LC_TIME","C")
 
 
 # Specify function NULL --------------------------------------------------------
@@ -95,7 +72,7 @@ write.table(data,"urls_titles.txt",row.names = F,sep=";")
 # Define scraper function -------------------------------------------------
 
 # Define error content
-url <- "http://www.springfieldspringfield.co.uk/movie_script.php?movie=horror"
+url <- "http://www.springfieldspringfield.co.uk/movie_script.php?movie=stuck"
 SOURCE <- getURL(url,encoding="UTF-8")
 PARSED <- htmlParse(SOURCE)
 
@@ -107,7 +84,7 @@ ERROR.CONTENT <- paste(unlist(xpathSApply(
 SpringfieldScraper <- function(url)
 {
   SOURCE <- getURL(url,encoding="UTF-8")
-  PARSED <- try_default(htmlParse(SOURCE),htmlParse(getURL("http://www.springfieldspringfield.co.uk/movie_script.php?movie=horror",encoding="UTF-8")))
+  PARSED <- try_default(htmlParse(SOURCE),htmlParse(getURL("http://www.springfieldspringfield.co.uk/movie_script.php?movie=stuck",encoding="UTF-8")))
   #title= f_isna(xpathSApply(PARSED, "//title",xmlValue))
   #if(length(title)==0){title <- "No title"}
   #title = title_input
@@ -118,7 +95,7 @@ SpringfieldScraper <- function(url)
   if(content==ERROR.CONTENT){content <- "ERROR"}
   extract_date <- Sys.Date()
   website <- "Springfield"
-  print(paste(url))
+  print(paste(Sys.time(),url))
   output <- data.frame(website, url,# title,
                        extract_date, content,
                        stringsAsFactors=FALSE)
@@ -146,7 +123,8 @@ write.table(dat, file=paste("data_",gsub(":","",Sys.time()),".txt"),row.names = 
 
 # Apply function to matched movies ----------------------------------------
 
-library(readr)
+#IMDB, ratings and Springfield dataset matched
+
 springfieldMatched <- read_csv("springfieldMatched.csv")
 
 m <- ceiling(nrow(springfieldMatched)/100)
@@ -155,33 +133,70 @@ b <- append(seq(from=100, to=nrow(springfieldMatched),by=100),nrow(springfieldMa
 
 for(k in 1:m)
 {
-  chunk <- paste0("dat_",k)
-  assign(chunk, ldply(springfieldMatched$urls[a[k]:b[k]],SpringfieldScraper))
+  #chunk <- paste0("dat_",k)
+  #assign(chunk, ldply(springfieldMatched$urls[a[k]:b[k]],SpringfieldScraper))
+  temp <- ldply(springfieldMatched$urls[a[k]:b[k]],SpringfieldScraper)
+  if(k>1){dat <- rbind(dat,temp)}else{dat <- temp}
   print(paste("This was batch",k))
+  remove(temp)
+  saveRDS(dat, "SpringfieldMatchedScripts.rds")
   Sys.sleep(1)
 }
 
-dat <- rbind(dat_1,dat_2,dat_3,dat_4,dat_5,dat_6,dat_7)
+#zzzz <- SpringfieldScraper(springfieldMatched$urls[200])
+
 dat$title <- springfieldMatched$titles
-
-
 saveRDS(dat, "SpringfieldMatchedScripts.rds")
-write.table(dat, file=paste("data_",gsub(":","",Sys.time()),".txt"),row.names = F,sep=";")
 
+#write.table(dat, file=paste("data_",gsub(":","",Sys.time()),".txt"),row.names = F,sep=";")
+
+
+
+#IMDB matched with Springfield
+
+IMDBMatched <- read_csv("springfieldMatchedIMDB.csv")
+
+
+m <- ceiling(nrow(IMDBMatched)/100)
+a <- seq(from=1, to=nrow(IMDBMatched), by=100)
+b <- append(seq(from=100, to=nrow(IMDBMatched),by=100),nrow(IMDBMatched))
+
+for(k in 1:m)
+{
+  temp <- ldply(IMDBMatched$urls[a[k]:b[k]],SpringfieldScraper)
+  if(k>1){dat2 <- rbind(dat2,temp)}else{dat2 <- temp}
+  print(paste("This was batch",k))
+  remove(temp)
+  saveRDS(dat2, "IMDBMatchedScripts.rds")
+  Sys.sleep(1)
+}
+
+dat2$title <- IMDBMatched$titles
+saveRDS(dat2, "IMDBMatchedScripts.rds")
 
 # Word cloud --------------------------------------------------------------
 
-library(tidytext)
-library(wordcloud)
-library(RColorBrewer)
+
 
 words <- dat[,] %>% unnest_tokens(word, content)
-
 saveRDS(words, "words_SpringfieldMatchedScripts.rds")
-write.table(words,"words_SpringfieldMatchedScripts.txt", sep = ";")
+#write.table(words,"words_SpringfieldMatchedScripts.txt", sep = ";")
 
 palette <- brewer.pal(9,"BuGn")[-(1:4)]
 set.seed(40)
+
+words %>% anti_join(stop_words) %>% count(word) %>% with(wordcloud(word,n,max.word=20,color = palette))
+
+
+
+
+words <- dat2[,] %>% unnest_tokens(word, content)
+saveRDS(words, "words_IMDBMatchedScripts.rds")
+#write.table(words,"words_SpringfieldMatchedScripts.txt", sep = ";")
+
+palette <- brewer.pal(9,"BuGn")[-(1:4)]
+set.seed(40)
+
 words %>% anti_join(stop_words) %>% count(word) %>% with(wordcloud(word,n,max.word=20,color = palette))
 
 

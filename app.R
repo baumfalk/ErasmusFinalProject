@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(wordcloud)
 library(tidytext)
-library(recommenderlab)
+#library(recommenderlab)
 source("readData.R")
 
 

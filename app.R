@@ -58,17 +58,17 @@ ui <-
                           
                           column(3, offset = 1, selectInput("selectedGender",
                                                             label = h3("Select gender"),
-                                                            choices = c("Male","Female"),
-                                                            selected = "Female")),
+                                                            choices = sort(unique(movielensUserData$Gender)),
+                                                            selected = sort(unique(movielensUserData$Gender))[1])),
                           
                           column(3, selectInput("selectedAge",
                                                 label = h3("Select age"),
-                                                choices = 1:100,
-                                                selected = 25)),
+                                                choices = sort(unique(movielensUserData$Age)),
+                                                selected = sort(unique(movielensUserData$Age)[1]))),
                           column(3, selectInput("selectedOccupation",
-                                                label = h3("Select age"),
-                                                choices = c("farmer","lawyer"),
-                                                selected = "farmer"))
+                                                label = h3("Select occupation"),
+                                                choices = sort(unique(movielensUserData$Occupation)),
+                                                selected = sort(unique(movielensUserData$Occupation)[1])))
                         ),
                         hr(),
                         uiOutput("film1"),
@@ -112,18 +112,46 @@ server <- function(input, output) {
       with(wordcloud(word,n,max.word=20))
   })
   
+  ##############
+  
+  # input$selectedMinimalScore
+  # input$selectedGender
+  # input$selectedAge
+  # input$selectedOccupation
+  
+  
   # filter de lijst met films aan de hand van gemiddelde score voor users die voldoen aan
   # de drie gevraagde criteria.
+
   filteredMovies <- filmDataPivot
+  filteredMoviesFunc <- reactive({
+      filteredRaters <- movielensUserData %>%
+      filter(Gender == input$selectedGender, Age == input$selectedAge, Occupation == input$selectedOccupation)
+    
+    filteredRatings <- movielensRatingData %>%
+      filter(UserID %in% filteredRaters$UserID) %>%
+      group_by(MovieID) %>%
+      summarize(meanRating=mean(Rating), count=n()) %>%
+      arrange(meanRating)
+    
+    filteredMovies <- filmDataPivot %>%
+      filter(MovieID %in% filteredRatings$MovieID) %>%
+      arrange(TitleAndYear)
+    filteredMovies
+  })
+  
+  
   # (gebruiker kiest uit deze lijst 1 tot 3 films)
   output$film1 <- renderUI({
-    selectInput("selMovie1",
-                label = h3("Select first movie"),
-                choices = filteredMovies$TitleAndYear
-                )
+      filteredMovies <- filteredMoviesFunc()
+      selectInput("selMovie1",
+              label = h3("Select first movie"),
+              choices = filteredMovies$TitleAndYear
+              )
   })
   
   output$film2 <- renderUI({
+    filteredMovies <- filteredMoviesFunc()
     selectInput("selMovie2",
                 label = h3("Select second movie"),
                 choices = filteredMovies$TitleAndYear
@@ -131,6 +159,7 @@ server <- function(input, output) {
   })
   
   output$film3 <- renderUI({
+    filteredMovies <- filteredMoviesFunc()
     selectInput("selMovie3",
                 label = h3("Select third movie"),
                 choices = filteredMovies$TitleAndYear

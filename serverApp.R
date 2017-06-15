@@ -143,7 +143,7 @@ server <- function(input, output) {
       filter(!(titlesSmall %in% c(input$selMovie1, input$selMovie2, input$selMovie3 )))
     
     
-    subset <- springfieldDataIMDB %>% 
+    subset <- springfieldDataIMDBTitles %>% 
       inner_join(top20,by=c("titlesSmall"="titlesSmall")) %>% 
       inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
       arrange(desc(count),desc(imdb_score)) %>%
@@ -152,11 +152,11 @@ server <- function(input, output) {
     subset
     # nearPoints() also works with hover and dblclick events
   })
-
+  
   
   # sorteer de dichtsbijzijnde films op aantal voorkomens in deze 3 top-20s, daarna op IMDB-cijfer
   
-
+  
   
   
   # display de top 20 dichtsbijzijnde films

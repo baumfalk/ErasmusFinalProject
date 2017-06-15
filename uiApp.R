@@ -68,7 +68,15 @@ secondPanel <- tabPanel("Recommender",
                           uiOutput("film2"),
                           uiOutput("film3"),
                           verbatimTextOutput("filmInfo"),
-                          verbatimTextOutput("filmInfo2")
+                          verbatimTextOutput("filmInfo2"),
+                          hr(),
+                          
+                          plotOutput("recommendedMoviesPlot", click="handleRecMovieClick"),
+                          
+                          br(),
+                          hr(),
+                          verbatimTextOutput("clickedMovieText"),
+                          plotOutput("clickedMoviePlot")
                         )
 )
 

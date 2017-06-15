@@ -117,11 +117,9 @@ server <- function(input, output) {
     
     top20_movies <- movies[top20_distances_indexes,]$TitleAndYear
   }
-  output$filmInfo <- renderPrint({
-    
-    # voor elke geselecteerde films:
-    #   verkrijg uit cluster de top 20 dichtsbijzijnde films (uit IMDB+script films)
-    
+  
+  
+  sharedtop20 <- reactive({
     movies <- normalizedMovies()
     
     selectedFilm1 <- movies %>% filter(TitleAndYear == input$selMovie1)
@@ -148,11 +146,43 @@ server <- function(input, output) {
       inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
       arrange(desc(count),desc(imdb_score)) %>%
       head(20)
+    subset
+  })
+  
+  output$filmInfo <- renderPrint({
     
+    # voor elke geselecteerde films:
+    #   verkrijg uit cluster de top 20 dichtsbijzijnde films (uit IMDB+script films)
+    
+    
+    
+    subset <- sharedtop20()
     subset
     # nearPoints() also works with hover and dblclick events
   })
   
+  output$recommendedMoviesPlot <- renderPlot({
+    subset <- sharedtop20()
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
+    ggplot(data=filmData, aes(x=Year,y=budget)) + geom_point()
+    
+  })
+  
+
+  output$clickedMovieText <- renderPrint({
+    filmData <- filmDataInSpringfield 
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
+    print(str(movie))
+    print(movie$TitleAndYear)
+    c(movie$Title,movie$Year)
+    # nearPoints() also works with hover and dblclick events
+  })
+  
+  output$clickedMoviePlot <- renderPlot({
+    
+  })
   
   # sorteer de dichtsbijzijnde films op aantal voorkomens in deze 3 top-20s, daarna op IMDB-cijfer
   

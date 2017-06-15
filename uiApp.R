@@ -64,26 +64,29 @@ secondPanel <- tabPanel("Recommender",
                                                   selected = sort(unique(movielensUserData$Occupation)[1])))
                           ),
                           hr(),
-                          uiOutput("film1"),
-                          uiOutput("film2"),
-                          uiOutput("film3"),
-                          verbatimTextOutput("filmInfo"),
-                          verbatimTextOutput("filmInfo2"),
+                          fluidRow(
+                            column(4,uiOutput("film1")),
+                            column(4,uiOutput("film2")),
+                            column(4,uiOutput("film3"))
+                          ),
+                          #verbatimTextOutput("filmInfo"),
+                          #verbatimTextOutput("filmInfo2"),
                           hr(),
                           
                           plotOutput("recommendedMoviesPlot", click="handleRecMovieClick"),
                           
                           br(),
                           hr(),
-                          verbatimTextOutput("clickedMovieText"),
-                          plotOutput("clickedMoviePlot")
+                          #verbatimTextOutput("clickedMovieText"),
+                          plotOutput("clickedMoviePlot"),
+                          plotOutput("clickedMoviePlotSentiment")
                         )
 )
 
 
 ui <- 
   navbarPage("Movies that Matter",
-             firstPanel,
              secondPanel,
+             firstPanel,
              tabPanel("Component 3")
   )

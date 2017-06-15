@@ -171,7 +171,9 @@ server <- function(input, output) {
   
 
   output$clickedMovieText <- renderPrint({
-    filmData <- filmDataInSpringfield 
+    subset <- sharedtop20()
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
     # With base graphics, need to tell it what the x and y variables are.
     movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
     print(str(movie))
@@ -180,8 +182,101 @@ server <- function(input, output) {
     # nearPoints() also works with hover and dblclick events
   })
   
-  output$clickedMoviePlot <- renderPlot({
+  
+  movieSentences <- reactive({
+    subset <- sharedtop20()
+    get_sentiments(c("nrc"))
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
     
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
+    
+    #movie_script <- dat[501,c("content")]
+    movie_script <- (SpringfieldMatchedScripts %>%
+                       filter(titlesSmall==movie$TitleAndYear))$content
+    
+    
+    movie_sentences <- data.frame(text = movie_script ) %>% 
+      unnest_tokens(sentence, text, token = "sentences")
+    movie_sentences$SentenceID <- seq(1:nrow(movie_sentences))
+    movie_sentences <- movie_sentences  %>% ungroup() %>%
+      unnest_tokens(word, sentence)
+    movie_sentences
+  })
+  
+  output$clickedMoviePlot <- renderPlot({
+    subset <- sharedtop20()
+    get_sentiments(c("nrc"))
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
+    
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
+    
+    #movie_script <- dat[501,c("content")]
+    movie_script <- (SpringfieldMatchedScripts %>%
+                       filter(titlesSmall==movie$TitleAndYear))$content
+    
+    
+    movie_sentences <- data.frame(text = movie_script ) %>% 
+      unnest_tokens(sentence, text, token = "sentences")
+    movie_sentences$SentenceID <- seq(1:nrow(movie_sentences))
+    movie_sentences <- movie_sentences  %>% ungroup() %>%
+      unnest_tokens(word, sentence)
+    
+    moviesentiment2 <- movie_sentences %>%
+      inner_join(get_sentiments("nrc"), by="word") %>%
+      count(index = SentenceID %/% 40, sentiment) %>%
+      spread(sentiment, n, fill = 0) %>%
+      mutate(som = joy + anger + anticipation + disgust + fear + sadness + surprise + trust) %>%
+      gather(emotion,value, -index,-som) %>%
+      filter(#value != 0, 
+        emotion != "sentiment",
+        emotion != "positive",
+        emotion != "negative") %>%
+      mutate(perc = value/som)
+    
+    
+    
+    
+    
+    g <- moviesentiment2 %>% ggplot () %>% +geom_area(aes(x=index, y=perc,fill=emotion)) +
+      ggtitle(paste("Emotional distribution during the movie",movie$TitleAndYear))
+    g
+  })
+  
+  output$clickedMoviePlotSentiment <- renderPlot({
+    subset <- sharedtop20()
+    get_sentiments(c("nrc"))
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
+    
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
+    
+    #movie_script <- dat[501,c("content")]
+    movie_script <- (SpringfieldMatchedScripts %>%
+                       filter(titlesSmall==movie$TitleAndYear))$content
+    
+    
+    movie_sentences <- data.frame(text = movie_script ) %>% 
+      unnest_tokens(sentence, text, token = "sentences")
+    movie_sentences$SentenceID <- seq(1:nrow(movie_sentences))
+    movie_sentences <- movie_sentences  %>% ungroup() %>%
+      unnest_tokens(word, sentence)
+    
+    moviesentiment1 <- movie_sentences %>%
+      inner_join(get_sentiments("nrc"), by="word") %>%
+      count(index = SentenceID %/% 40, sentiment) %>%
+      filter(sentiment %in% c("positive", "negative")) %>%
+      spread(sentiment, n, fill = 0) %>%
+      mutate(sentiment = positive - negative)
+    
+    g2 <- ggplot(moviesentiment1, aes(index, sentiment)) +
+      geom_col(show.legend = FALSE) + ggtitle(paste("Sentiment during the movie",movie$TitleAndYear))
+    
+    g2
   })
   
   # sorteer de dichtsbijzijnde films op aantal voorkomens in deze 3 top-20s, daarna op IMDB-cijfer

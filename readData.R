@@ -18,10 +18,10 @@ SpringfieldMatchedScripts <- readRDS("data/springfield/springfieldmatchedscripts
 SpringfieldMatchedScripts <- SpringfieldMatchedScripts %>%
   mutate(titlesSmall=tolower(SpringfieldMatchedScripts$title))
 
-SpringfieldMatchedIMDBScripts <- readRDS("data/springfield/IMDBMatchedScripts.rds")
+#SpringfieldMatchedIMDBScripts <- readRDS("data/springfield/IMDBMatchedScripts.rds")
 
-SpringfieldMatchedIMDBScripts <- SpringfieldMatchedIMDBScripts %>%
-  mutate(titlesSmall=tolower(SpringfieldMatchedIMDBScripts$title))
+#SpringfieldMatchedIMDBScripts <- SpringfieldMatchedIMDBScripts %>%
+#  mutate(titlesSmall=tolower(SpringfieldMatchedIMDBScripts$title))
 
 springfieldDataRaw <- springfieldDataRaw %>%
   mutate(titles=iconv(titles,"WINDOWS-1252","UTF-8"))%>%

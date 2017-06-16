@@ -87,6 +87,49 @@ server <- function(input, output) {
     )
   })
   
+  getFirstLinkFromHTML <- function(raw_html){
+    tmp <- raw_html %>% html_nodes("a") %>% html_attr("href")
+    tmp_df <- data.frame(url=tmp,stringsAsFactors = F) %>%
+      filter(startsWith(url,"/watch?v=")) %>%
+      mutate(url=gsub("\\Qwatch?v=\\E","embed/",url))
+    return(paste0("//www.youtube.com",tmp_df$url[1]))
+  }
+  
+  getFirstUrlFromSearchQuery <- function(searchurl){
+    #HTML van searchlink opslaan
+    HTMLRAW <- read_html(searchurl)
+    #Eerste link weergeven
+    url <- getFirstLinkFromHTML(HTMLRAW)
+    #Teruggeven eerste link
+    return(url)
+  }
+  
+  
+  output$trailer <- renderUI({
+    
+    print("TEST")
+    #krijg geselecteerde film
+    subset <- sharedtop20()
+    
+    filmData <- filmDataInSpringfield %>%
+      filter(TitleAndYear %in% subset$titlesSmall)
+    
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
+    print(movie)
+    
+    #krijg trailer
+    urlEncodedTitle <- URLencode(movie$TitleAndYear,reserved = TRUE)
+    
+    searchQueryURL<- paste0("https://www.youtube.com/results?search_query=",urlEncodedTitle,"+official+trailer")
+    
+    trailerURL <- getFirstUrlFromSearchQuery(searchQueryURL)
+    #geef trailer weer
+    print(trailerURL)
+    embedURL <- paste0('<iframe width="600" height="300" src="', trailerURL,'" frameborder="0" allowfullscreen></iframe>')
+    HTML(embedURL)
+  })
+  
   distance <- function(f1, f2) {
     sqrt(sum((f1-f2)^2))
   }

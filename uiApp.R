@@ -96,20 +96,8 @@ secondPanel <- tabPanel(
   )
 )
 
-thirdPanel <- tabPanel(
-  "Explore genres",
-  fluidPage(
-    
-    hr(),
-    
-    #plotOutput("budgetPerYearPlot", click="handleGenreClick"),
-    
-    br()
-    
-    #verbatimTextOutput("info"),
-    #plotOutput("moviePlot")
-  )
-)
+source("thirdpanel.R")
+
 
 ui <- 
   navbarPage("Movies that Matter",

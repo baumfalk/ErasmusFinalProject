@@ -1,6 +1,6 @@
 # Define server logic required to draw a graphs etc.
 
-
+library(ggvis)
 library(shiny)
 
 server <- function(input, output) {
@@ -33,7 +33,76 @@ server <- function(input, output) {
       with(wordcloud(word,n,max.word=20))
   })
   
+  movies <- reactive({
+    # Due to dplyr issue #318, we need temp variables for input values
+    minyear <- input$year_explore[1]
+    maxyear <- input$year_explore[2]
+    
+    # Apply filters
+    m <- filmData %>%
+      filter(
+        Year >= minyear,
+        Year <= maxyear
+        
+      ) %>%
+      distinct(MovieID,.keep_all=T) %>%
+      arrange(imdb_score)
+    
+    # Optional: filter by genre
+    if (input$genre_explore != "All") {
+      genre <- paste0(input$genre_explore)
+      m <- m %>% filter(grepl(genre,Genre))
+    }
+    # Optional: filter by title
+    if (!is.null(input$title_explore) && input$title_explore != "") {
+      m_title <- paste0(input$title_explore)
+      m <- m %>% filter(grepl(m_title,titlesSmall))
+    }
+    m <- as.data.frame(m)
+    
+  })
   
+  # Function for generating tooltip text
+  movie_tooltip <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.null(x$MovieID)) return(NULL)
+
+    # Pick out the movie with this ID
+    all_movies <- isolate(movies())
+    movie <- filmData[filmData$MovieID == x$MovieID, ] %>%
+      distinct(MovieID,.keep_all=T)
+
+    paste0("<b>", movie$TitleAndYear, "</b><br>",
+           movie$Year, "<br>",
+           "$", format(movie$budget, big.mark = ",", scientific = FALSE)
+    )
+  }
+  
+  # A reactive expression with the ggvis plot
+  vis <- reactive({
+    # Lables for axes
+    xvar_name <- names(axis_vars)[axis_vars == input$xvar]
+    yvar_name <- names(axis_vars)[axis_vars == input$yvar]
+    
+    # Normally we could do something like props(x = ~BoxOffice, y = ~Reviews),
+    # but since the inputs are strings, we need to do a little more work.
+    xvar <- prop("x", as.symbol(input$xvar))
+    yvar <- prop("y", as.symbol(input$yvar))
+    
+    movies %>%
+    ggvis(x = xvar, y = yvar) %>%
+    layer_points(size := 50, size.hover := 200,
+                 fillOpacity := 0.2, fillOpacity.hover := 0.5,
+                 key := ~MovieID) %>%
+    add_tooltip(movie_tooltip, "hover") %>%
+    add_axis("x", title = xvar_name) %>%
+    add_axis("y", title = yvar_name) %>%
+    set_options(width = 500, height = 500)
+  })
+  
+  vis %>% bind_shiny("dynamic_plot")
+  
+  output$n_movies <- renderText({ nrow(movies()) })
   
   
   ##############

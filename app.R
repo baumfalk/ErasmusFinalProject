@@ -7,9 +7,11 @@ library(xml2)
 library(rvest)
 require(selectr)
 library(jpeg)
-
+library(ggvis)
 #library(recommenderlab)
+
 source("readData.R")
+source("flexibleVars.R")
 source("uiApp.R")
 source("serverApp.R")
 

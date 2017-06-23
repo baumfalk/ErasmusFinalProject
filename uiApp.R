@@ -100,24 +100,11 @@ thirdPanel <- tabPanel(
   "Explore genres",
   fluidPage(
     
-    fluidRow(
-      column(3, selectInput("selectedGenre_explore",
-                            label = h3("Select genre"),
-                            choices = genres)),
-      
-      column(4, offset = 1, selectInput("selectedGenre2_explore",
-                                        label = h3("Select genre"),
-                                        choices = genres)),
-      
-      column(4, selectInput("selectedGenre3_explore",
-                            label = h3("Select genre"),
-                            choices = genres))
-    ),
     hr(),
     
     #plotOutput("budgetPerYearPlot", click="handleGenreClick"),
     
-    br(),
+    br()
     
     #verbatimTextOutput("info"),
     #plotOutput("moviePlot")

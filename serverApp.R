@@ -188,9 +188,10 @@ server <- function(input, output) {
       inner_join(top20,by=c("titlesSmall"="titlesSmall")) %>% 
       inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
       arrange(desc(count),desc(imdb_score)) %>%
-      head(20)
+      distinct(titlesSmall) %>%
+      head(10)
     subset
-  })
+   })
   
   output$filmInfo <- renderPrint({
     

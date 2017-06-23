@@ -104,10 +104,18 @@ springfieldDataIMDBTitles <- springfieldDataRaw[springfieldDataRaw$titlesSmall %
 filmDataNotSpringfieldIMDBTitles <- imdbData[!(imdbData$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
 
 
-
-
 genres <- unique((filmDataInSpringfield %>%
   arrange(Genre))$Genre)
 
 
-
+movielens_age <- read.csv("data/movielens/movielens_age.csv", sep=";") %>%
+  mutate(age=as.integer(ï..age)) %>%
+  select(-ï..age)
+age_list <- with(movielens_age, split(age, text))
+  
+  
+movielens_occupation <- read.csv("data/movielens/movielens_occupation.csv", sep=";") %>%
+  mutate(occupation=as.integer(ï..Occupation),
+         text=as.character(text)) %>%
+  select(-ï..Occupation)
+occupation_list <- with(movielens_occupation, split(occupation, text))

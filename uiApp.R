@@ -2,7 +2,7 @@
 
 library(shiny)
 
-firstPanel <- tabPanel(
+secondPanel <- tabPanel(
   "Descriptive",
   fluidPage(
     
@@ -35,7 +35,7 @@ firstPanel <- tabPanel(
   )
 )
 
-secondPanel <- tabPanel("Recommender",
+firstPanel <- tabPanel("Recommender",
                         fluidPage(
                           
                           # Application title
@@ -45,22 +45,22 @@ secondPanel <- tabPanel("Recommender",
                           
                           fluidRow(
                             column(2, selectInput("selectedMinimalScore",
-                                                  label = h3("Minimal score"),
+                                                  label = h3("Minimal score on movielens (best=5)"),
                                                   choices = 1:5,
                                                   selected = 3)),
                             
                             column(3, offset = 1, selectInput("selectedGender",
                                                               label = h3("Select gender"),
-                                                              choices = sort(unique(movielensUserData$Gender)),
+                                                              choices = c("Female"= "F","Male"="M"),#sort(unique(movielensUserData$Gender)),
                                                               selected = sort(unique(movielensUserData$Gender))[1])),
                             
                             column(3, selectInput("selectedAge",
                                                   label = h3("Select age"),
-                                                  choices = sort(unique(movielensUserData$Age)),
+                                                  choices = age_list,
                                                   selected = sort(unique(movielensUserData$Age)[1]))),
                             column(3, selectInput("selectedOccupation",
                                                   label = h3("Select occupation"),
-                                                  choices = sort(unique(movielensUserData$Occupation)),
+                                                  choices = occupation_list,
                                                   selected = sort(unique(movielensUserData$Occupation)[1])))
                           ),
                           hr(),
@@ -99,7 +99,7 @@ secondPanel <- tabPanel("Recommender",
 
 ui <- 
   navbarPage("Movies that Matter",
-             secondPanel,
              firstPanel,
+             secondPanel,
              tabPanel("Component 3")
   )

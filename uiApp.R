@@ -115,7 +115,7 @@ thirdPanel <- tabPanel(
     ),
     hr(),
     
-    plotOutput("budgetPerYearPlot", click="handleGenreClick"),
+    #plotOutput("budgetPerYearPlot", click="handleGenreClick"),
     
     br(),
     

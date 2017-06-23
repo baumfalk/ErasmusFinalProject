@@ -1,4 +1,4 @@
-# Define server logic required to draw a histogram
+# Define server logic required to draw a graphs etc.
 
 
 library(shiny)
@@ -32,6 +32,9 @@ server <- function(input, output) {
       count(word) %>%
       with(wordcloud(word,n,max.word=20))
   })
+  
+  
+  
   
   ##############
   
@@ -386,17 +389,6 @@ server <- function(input, output) {
   })
   
   
-  
-  # #retrieve img url
-  # for(x in 1:n) {
-  # 
-  #   #output[[paste("img",i,sep="")]] <- renderPlot({
-  #    # plot(c(1,2,3))
-  #   #})
-  #   img <-
-  #   print(x)
-  #   output[[paste("img",1,sep="")]] <- img
-  # }
   output[[paste("img",1,sep="")]] <- renderImage({
     movieImages()[[1]]
   },deleteFile=F) 
@@ -428,37 +420,7 @@ server <- function(input, output) {
     movieImages()[[10]]
   },deleteFile=F) 
   
-    #binary_images[[1]]
-  # })
-  # output[[paste("img",2,sep="")]] <-  renderImage({
-  #   binary_images[[2]]
-  # })
-  # output[[paste("img",3,sep="")]] <-  renderImage({
-  #   binary_images[[3]]
-  # })
-  # output[[paste("img",4,sep="")]] <-  renderImage({
-  #   binary_images[[4]]
-  # })
-  # output[[paste("img",5,sep="")]] <-  renderImage({
-  #   binary_images[[5]]
-  # })
-  # output[[paste("img",6,sep="")]] <-  renderImage({
-  #   binary_images[[6]]
-  # })
-  # output[[paste("img",7,sep="")]] <-  renderImage({
-  #   binary_images[[7]]
-  # })
-  # output[[paste("img",8,sep="")]] <-  renderImage({
-  #   binary_images[[8]]
-  # })
-  # output[[paste("img",9,sep="")]] <-  renderImage({
-  #   binary_images[[9]]
-  # })
-  # output[[paste("img",10,sep="")]] <-  renderImage({
-  #   binary_images[[10]]
-  # })
-  # 
-  
+
   output[["images"]] <- renderUI({
     
     numRows <- ceiling(n/nImagesPerRow)

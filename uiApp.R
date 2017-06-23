@@ -73,6 +73,16 @@ firstPanel <- tabPanel("Recommender",
                           #verbatimTextOutput("filmInfo2"),
                           hr(),
                           
+                          #
+                          uiOutput("images"),
+                          
+                          # fluidRow(
+                          #   column(3,imageOutput("image1",click = "image_click"))
+                          # 
+                          # ),
+                          
+                          
+                          
                           plotOutput("recommendedMoviesPlot", click="handleRecMovieClick"),
                           
                           br(),

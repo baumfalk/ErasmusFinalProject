@@ -6,7 +6,7 @@ library(tidytext)
 library(xml2)
 library(rvest)
 require(selectr)
-
+library(jpeg)
 
 #library(recommenderlab)
 source("readData.R")

@@ -119,7 +119,9 @@ server <- function(input, output) {
     print(movie)
     
     #krijg trailer
-    urlEncodedTitle <- URLencode(movie$TitleAndYear,reserved = TRUE)
+    urlEncodedTitle <- URLencode(if_else(is.na(movie$TitleAndYear),
+                                         "never gonna give you up",movie$TitleAndYear),
+                                 reserved = TRUE)
     
     searchQueryURL<- paste0("https://www.youtube.com/results?search_query=",urlEncodedTitle,"+official+trailer")
     

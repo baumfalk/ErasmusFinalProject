@@ -17,6 +17,15 @@ springfieldDataRaw <- read.csv2("data/springfield/urls_titles_springfield.txt")
 SpringfieldMatchedScripts <- readRDS("data/springfield/springfieldmatchedscripts.rds")
 SpringfieldMatchedScripts <- SpringfieldMatchedScripts %>%
   mutate(titlesSmall=tolower(SpringfieldMatchedScripts$title))
+
+#SpringfieldMatchedIMDBScripts <- readRDS("data/springfield/IMDBMatchedScripts.rds")
+
+#SpringfieldMatchedIMDBScripts <- SpringfieldMatchedIMDBScripts %>%
+#  mutate(titlesSmall=tolower(SpringfieldMatchedIMDBScripts$title))
+
+springfieldDataRaw <- springfieldDataRaw %>%
+  mutate(titles=iconv(titles,"WINDOWS-1252","UTF-8"))%>%
+  mutate(titlesSmall=tolower(stringr::str_trim(titles)))
 #SpringfieldMatchedScriptsTidy <- SpringfieldMatchedScripts %>%
   #unnest_tokens(word, content)
 
@@ -24,6 +33,19 @@ SpringfieldMatchedScripts <- SpringfieldMatchedScripts %>%
 imdbData <- imdbDataRaw %>%
   mutate(movie_title_char = as.character(movie_title) %>% str_trim) %>%
   mutate(title_year=as.integer(title_year))
+
+#intersection of imdb-data with springfield data
+filmDataImdbSpringfield <- imdbData %>%
+  separate(genres, into = paste("Genre", 1:8,sep=""), sep = "\\Q|\\E",fill="right") %>%
+  gather(key = GenreNum, value=Genre,Genre1:Genre8) %>%
+  filter(!is.na(Genre)) %>%
+  select(-GenreNum) %>%
+  unique() %>%
+  mutate(titlesSmall=tolower(substr(movie_title,1,length(movie_title)-2))) %>%
+  mutate(TitleAndYear = paste(titlesSmall,paste("(",title_year,")",sep=""))) 
+  
+  
+
   
 
 fixYear <- function(data) {
@@ -67,9 +89,7 @@ movielensRatingDataRaw %>%
 movielensRatingData = movielensRatingDataRaw[movielensRatingDataRaw$MovieID %in% filmDataPivot$MovieID,]
 movielensUserData = movielensUserDataRaw[movielensUserDataRaw$UserID %in% movielensRatingData$UserID,]
 
-springfieldDataRaw <- springfieldDataRaw %>%
-mutate(titles=iconv(titles,"WINDOWS-1252","UTF-8"))%>%
-mutate(titlesSmall=tolower(stringr::str_trim(titles)))
+
 
 springfieldData <- springfieldDataRaw[springfieldDataRaw$titlesSmall %in% filmDataPivot$TitleAndYear,]
 filmDataNotSpringfield <- filmDataPivot[!(filmDataPivot$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
@@ -80,8 +100,11 @@ imdbData <- imdbData %>%
 mutate(titlesSmall=tolower(iconv(movie_title_char,"WINDOWS-1252","UTF-8"))) %>%
 mutate(TitleAndYear = paste(titlesSmall,paste("(",title_year,")",sep="")))
 
-springfieldDataIMDB <- springfieldDataRaw[springfieldDataRaw$titlesSmall %in% imdbData$TitleAndYear,]
-filmDataNotSpringfieldIMDB <- imdbData[!(imdbData$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
+springfieldDataIMDBTitles <- springfieldDataRaw[springfieldDataRaw$titlesSmall %in% imdbData$TitleAndYear,]
+filmDataNotSpringfieldIMDBTitles <- imdbData[!(imdbData$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
+
+
+
 
 genres <- unique((filmDataInSpringfield %>%
   arrange(Genre))$Genre)

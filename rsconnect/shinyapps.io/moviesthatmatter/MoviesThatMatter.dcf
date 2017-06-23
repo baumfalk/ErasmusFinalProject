@@ -8,3 +8,4 @@ url: https://moviesthatmatter.shinyapps.io/MoviesThatMatter/
 when: 1497619776.76184
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: .httr-oauth|data/movielens/.DS_Store

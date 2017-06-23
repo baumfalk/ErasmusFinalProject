@@ -322,6 +322,20 @@ server <- function(input, output) {
     g2
   })
   
+  output$image1 = renderImage({
+    url="https://images-na.ssl-images-amazon.com/images/M/MV5BMDU2ZWJlMjktMTRhMy00ZTA5LWEzNDgtYmNmZTEwZTViZWJkXkEyXkFqcGdeQXVyNDQ2OTk4MzI@._V1_UX182_CR0,0,182,268_AL_.jpg"
+    
+    z <- tempfile()
+    download.file(url,z,mode="wb")
+    pic <- readJPEG(z)
+    
+    list(
+      src = z,
+      contentType = "image/jpg",
+      alt = "This is alternate text"
+    )
+  })
+  
   # sorteer de dichtsbijzijnde films op aantal voorkomens in deze 3 top-20s, daarna op IMDB-cijfer
   
   
@@ -333,6 +347,135 @@ server <- function(input, output) {
   
   # (gebruiker klikt op een film)
   # geef details over geselecteerde film
+ 
   
+  n <- 10
+  nImagesPerRow <- 5
+
+  #filmnames <- as.character(sample(filmData$TitleAndYear,n)) %>% iconv("latin1", "ASCII", sub="")
+  movieImages <- reactive({
+    subset <- sharedtop20()
+    
+    filmnames <- subset$titlesSmall
+    makeNiceImageURL <- function(filmname) {
+      url <- paste("https://www.google.nl/search?q=",URLencode(paste(filmname,"movie poster"),reserved=TRUE),"&tbm=isch",sep="")
+    }
+    urls <- sapply(filmnames,makeNiceImageURL)
+    binary_images <- list()
+    print(getwd())
+    for(i in 1:n) {
+      print(paste("URL",i,":",urls[i]))
+      html <- read_html(urls[i])
+      img_url <- (html %>% html_nodes("img") %>% html_attr("src"))[1]
+      
+      img_file_url <- tempfile(fileext = ".jpg")
+      download.file(img_url,img_file_url,mode="wb",cacheOK=FALSE)
+      
+      binary_image <- list(list(src = img_file_url,
+                                contentType = "image/jpg",
+                                title = filmnames[i],
+                                height="250px")
+      )
+      binary_images <- append(binary_images,binary_image)
+      print(paste(i,filmnames[i]))
+    }
+    binary_images
+  })
+  
+  
+  
+  # #retrieve img url
+  # for(x in 1:n) {
+  # 
+  #   #output[[paste("img",i,sep="")]] <- renderPlot({
+  #    # plot(c(1,2,3))
+  #   #})
+  #   img <-
+  #   print(x)
+  #   output[[paste("img",1,sep="")]] <- img
+  # }
+  output[[paste("img",1,sep="")]] <- renderImage({
+    movieImages()[[1]]
+  },deleteFile=F) 
+  output[[paste("img",2,sep="")]] <- renderImage({
+    movieImages()[[2]]
+  },deleteFile=F) 
+  output[[paste("img",3,sep="")]] <- renderImage({
+    movieImages()[[3]]
+  },deleteFile=F) 
+  output[[paste("img",4,sep="")]] <- renderImage({
+    movieImages()[[4]]
+  },deleteFile=F) 
+  output[[paste("img",5,sep="")]] <- renderImage({
+    movieImages()[[5]]
+  },deleteFile=F) 
+  output[[paste("img",6,sep="")]] <- renderImage({
+    movieImages()[[6]]
+  },deleteFile=F) 
+  output[[paste("img",7,sep="")]] <- renderImage({
+    movieImages()[[7]]
+  },deleteFile=F) 
+  output[[paste("img",8,sep="")]] <- renderImage({
+    movieImages()[[8]]
+  },deleteFile=F) 
+  output[[paste("img",9,sep="")]] <- renderImage({
+    movieImages()[[9]]
+  },deleteFile=F) 
+  output[[paste("img",10,sep="")]] <- renderImage({
+    movieImages()[[10]]
+  },deleteFile=F) 
+  
+    #binary_images[[1]]
+  # })
+  # output[[paste("img",2,sep="")]] <-  renderImage({
+  #   binary_images[[2]]
+  # })
+  # output[[paste("img",3,sep="")]] <-  renderImage({
+  #   binary_images[[3]]
+  # })
+  # output[[paste("img",4,sep="")]] <-  renderImage({
+  #   binary_images[[4]]
+  # })
+  # output[[paste("img",5,sep="")]] <-  renderImage({
+  #   binary_images[[5]]
+  # })
+  # output[[paste("img",6,sep="")]] <-  renderImage({
+  #   binary_images[[6]]
+  # })
+  # output[[paste("img",7,sep="")]] <-  renderImage({
+  #   binary_images[[7]]
+  # })
+  # output[[paste("img",8,sep="")]] <-  renderImage({
+  #   binary_images[[8]]
+  # })
+  # output[[paste("img",9,sep="")]] <-  renderImage({
+  #   binary_images[[9]]
+  # })
+  # output[[paste("img",10,sep="")]] <-  renderImage({
+  #   binary_images[[10]]
+  # })
+  # 
+  
+  output[["images"]] <- renderUI({
+    
+    numRows <- ceiling(n/nImagesPerRow)
+    
+    # voor elke rij
+    rows <- list()
+    count<-1
+    for(i in 1:numRows) {
+      # voeg de nImagesPerRow toe
+      images <- list()
+      for(j in 1:nImagesPerRow) {
+        img_name <- paste("img",count,sep="")
+        images <- append(images,list(column(2,imageOutput(img_name,height="500px"))))
+        
+        count <- count + 1
+      }
+      rows <- append(rows, list(fluidRow(images)))
+    }
+    fluidPage(rows)
+    #})
+  })
   
 }

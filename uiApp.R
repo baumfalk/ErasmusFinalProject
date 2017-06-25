@@ -2,39 +2,6 @@
 
 library(shiny)
 
-secondPanel <- tabPanel(
-  "Descriptive",
-  fluidPage(
-    
-    # Application title
-    #titlePanel("Movies That Matter"),
-    
-    # Sidebar with a slider input for number of bins
-    
-    fluidRow(
-      column(3, selectInput("selectedGenre",
-                            label = h3("Select genre"),
-                            choices = genres)),
-      
-      column(4, offset = 1, selectInput("selectedGenre2",
-                                        label = h3("Select genre"),
-                                        choices = genres)),
-      
-      column(4, selectInput("selectedGenre3",
-                            label = h3("Select genre"),
-                            choices = genres))
-    ),
-    hr(),
-    
-    plotOutput("budgetPerYearPlot", click="handleGenreClick"),
-    
-    br(),
-    
-    verbatimTextOutput("info"),
-    plotOutput("moviePlot")
-  )
-)
-
 firstPanel <- tabPanel("Recommender",
                         fluidPage(
                           
@@ -96,10 +63,45 @@ firstPanel <- tabPanel("Recommender",
                         )
 )
 
+secondPanel <- tabPanel(
+  "Descriptive",
+  fluidPage(
+    
+    # Application title
+    #titlePanel("Movies That Matter"),
+    
+    # Sidebar with a slider input for number of bins
+    
+    fluidRow(
+      column(3, selectInput("selectedGenre",
+                            label = h3("Select genre"),
+                            choices = genres)),
+      
+      column(4, offset = 1, selectInput("selectedGenre2",
+                                        label = h3("Select genre"),
+                                        choices = genres)),
+      
+      column(4, selectInput("selectedGenre3",
+                            label = h3("Select genre"),
+                            choices = genres))
+    ),
+    hr(),
+    
+    plotOutput("budgetPerYearPlot", click="handleGenreClick"),
+    
+    br(),
+    
+    verbatimTextOutput("info"),
+    plotOutput("moviePlot")
+  )
+)
+
+source("thirdpanel.R")
+
 
 ui <- 
   navbarPage("Movies that Matter",
              firstPanel,
              secondPanel,
-             tabPanel("Component 3")
+             thirdPanel
   )

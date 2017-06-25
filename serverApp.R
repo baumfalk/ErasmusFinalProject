@@ -1,6 +1,6 @@
-# Define server logic required to draw a histogram
+# Define server logic required to draw a graphs etc.
 
-
+library(ggvis)
 library(shiny)
 
 server <- function(input, output) {
@@ -32,6 +32,78 @@ server <- function(input, output) {
       count(word) %>%
       with(wordcloud(word,n,max.word=20))
   })
+  
+  movies <- reactive({
+    # Due to dplyr issue #318, we need temp variables for input values
+    minyear <- input$year_explore[1]
+    maxyear <- input$year_explore[2]
+    
+    # Apply filters
+    m <- filmData %>%
+      filter(
+        Year >= minyear,
+        Year <= maxyear
+        
+      ) %>%
+      distinct(MovieID,.keep_all=T) %>%
+      arrange(imdb_score)
+    
+    # Optional: filter by genre
+    if (input$genre_explore != "All") {
+      genre <- paste0(input$genre_explore)
+      m <- m %>% filter(grepl(genre,Genre))
+    }
+    # Optional: filter by title
+    if (!is.null(input$title_explore) && input$title_explore != "") {
+      m_title <- paste0(input$title_explore)
+      m <- m %>% filter(grepl(m_title,titlesSmall))
+    }
+    m <- as.data.frame(m)
+    
+  })
+  
+  # Function for generating tooltip text
+  movie_tooltip <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.null(x$MovieID)) return(NULL)
+
+    # Pick out the movie with this ID
+    all_movies <- isolate(movies())
+    movie <- filmData[filmData$MovieID == x$MovieID, ] %>%
+      distinct(MovieID,.keep_all=T)
+
+    paste0("<b>", movie$TitleAndYear, "</b><br>",
+           movie$Year, "<br>",
+           "$", format(movie$budget, big.mark = ",", scientific = FALSE)
+    )
+  }
+  
+  # A reactive expression with the ggvis plot
+  vis <- reactive({
+    # Lables for axes
+    xvar_name <- names(axis_vars)[axis_vars == input$xvar]
+    yvar_name <- names(axis_vars)[axis_vars == input$yvar]
+    
+    # Normally we could do something like props(x = ~BoxOffice, y = ~Reviews),
+    # but since the inputs are strings, we need to do a little more work.
+    xvar <- prop("x", as.symbol(input$xvar))
+    yvar <- prop("y", as.symbol(input$yvar))
+    
+    movies %>%
+    ggvis(x = xvar, y = yvar) %>%
+    layer_points(size := 50, size.hover := 200,
+                 fillOpacity := 0.2, fillOpacity.hover := 0.5,
+                 key := ~MovieID) %>%
+    add_tooltip(movie_tooltip, "hover") %>%
+    add_axis("x", title = xvar_name) %>%
+    add_axis("y", title = yvar_name) %>%
+    set_options(width = 500, height = 500)
+  })
+  
+  vis %>% bind_shiny("dynamic_plot")
+  
+  output$n_movies <- renderText({ nrow(movies()) })
+  
   
   ##############
   
@@ -119,7 +191,9 @@ server <- function(input, output) {
     print(movie)
     
     #krijg trailer
-    urlEncodedTitle <- URLencode(movie$TitleAndYear,reserved = TRUE)
+    urlEncodedTitle <- URLencode(if_else(is.na(movie$TitleAndYear),
+                                         "never gonna give you up",movie$TitleAndYear),
+                                 reserved = TRUE)
     
     searchQueryURL<- paste0("https://www.youtube.com/results?search_query=",urlEncodedTitle,"+official+trailer")
     
@@ -188,9 +262,10 @@ server <- function(input, output) {
       inner_join(top20,by=c("titlesSmall"="titlesSmall")) %>% 
       inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
       arrange(desc(count),desc(imdb_score)) %>%
-      head(20)
+      distinct(titlesSmall) %>%
+      head(10)
     subset
-  })
+   })
   
   output$filmInfo <- renderPrint({
     
@@ -383,17 +458,6 @@ server <- function(input, output) {
   })
   
   
-  
-  # #retrieve img url
-  # for(x in 1:n) {
-  # 
-  #   #output[[paste("img",i,sep="")]] <- renderPlot({
-  #    # plot(c(1,2,3))
-  #   #})
-  #   img <-
-  #   print(x)
-  #   output[[paste("img",1,sep="")]] <- img
-  # }
   output[[paste("img",1,sep="")]] <- renderImage({
     movieImages()[[1]]
   },deleteFile=F) 
@@ -425,37 +489,7 @@ server <- function(input, output) {
     movieImages()[[10]]
   },deleteFile=F) 
   
-    #binary_images[[1]]
-  # })
-  # output[[paste("img",2,sep="")]] <-  renderImage({
-  #   binary_images[[2]]
-  # })
-  # output[[paste("img",3,sep="")]] <-  renderImage({
-  #   binary_images[[3]]
-  # })
-  # output[[paste("img",4,sep="")]] <-  renderImage({
-  #   binary_images[[4]]
-  # })
-  # output[[paste("img",5,sep="")]] <-  renderImage({
-  #   binary_images[[5]]
-  # })
-  # output[[paste("img",6,sep="")]] <-  renderImage({
-  #   binary_images[[6]]
-  # })
-  # output[[paste("img",7,sep="")]] <-  renderImage({
-  #   binary_images[[7]]
-  # })
-  # output[[paste("img",8,sep="")]] <-  renderImage({
-  #   binary_images[[8]]
-  # })
-  # output[[paste("img",9,sep="")]] <-  renderImage({
-  #   binary_images[[9]]
-  # })
-  # output[[paste("img",10,sep="")]] <-  renderImage({
-  #   binary_images[[10]]
-  # })
-  # 
-  
+
   output[["images"]] <- renderUI({
     
     numRows <- ceiling(n/nImagesPerRow)

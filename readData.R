@@ -119,3 +119,22 @@ movielens_occupation <- read.csv("data/movielens/movielens_occupation.csv", sep=
          text=as.character(text)) %>%
   select(-ï..Occupation)
 occupation_list <- with(movielens_occupation, split(occupation, text))
+
+
+#####
+movie_sentiment <- data.frame(text = as.character(SpringfieldMatchedScripts$content),
+                              movie=SpringfieldMatchedScripts$titlesSmall) %>%
+  mutate(text = as.character(text)) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(get_sentiments("nrc"), by="word") %>%
+  count(index = movie, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(som_emo = joy + anger + anticipation + disgust + fear + sadness + surprise + trust,
+         som_pos = negative+positive) %>%
+  gather(emotion,value, -index,-som_emo,-som_pos) %>%
+  filter(#value != 0, 
+    emotion != "sentiment") %>%
+  mutate(perc = ifelse(as.character(emotion)== "positive" | as.character(emotion)== "negative",
+                       value/som_pos,value/som_emo)) %>%
+  select(index,emotion,perc) %>%
+  spread(emotion,perc,fill=0)

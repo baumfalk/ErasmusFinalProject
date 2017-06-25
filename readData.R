@@ -108,16 +108,15 @@ genres <- unique((filmDataInSpringfield %>%
   arrange(Genre))$Genre)
 
 
-movielens_age <- read.csv("data/movielens/movielens_age.csv", sep=";") %>%
-  mutate(age=as.integer(ï..age)) %>%
-  select(-ï..age)
+movielens_age <- read.csv2("data/movielens/movielens_age.csv", sep=";")
+names(movielens_age) <- c("age","text")
+
 age_list <- with(movielens_age, split(age, text))
   
   
-movielens_occupation <- read.csv("data/movielens/movielens_occupation.csv", sep=";") %>%
-  mutate(occupation=as.integer(ï..Occupation),
-         text=as.character(text)) %>%
-  select(-ï..Occupation)
+movielens_occupation <- read.csv2("data/movielens/movielens_occupation.csv", sep=";",stringsAsFactors = F)
+names(movielens_occupation) <- c("occupation","text")
+
 occupation_list <- with(movielens_occupation, split(occupation, text))
 
 

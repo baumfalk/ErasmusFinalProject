@@ -108,9 +108,18 @@ server <- function(input, output) {
   ##############
   
   filteredMovies_pref <- filmDataPivot
-  filteredMoviesFunc_pref <- reactive({
+  filteredRaters_pref <- movielensUserData
+  
+  filteredRatersFunc_pref <- reactive({ 
     filteredRaters_pref <- movielensUserData %>%
-      filter(Gender == input$selectedGender_pref, Age == input$selectedAge_pref, Occupation == input$selectedOccupation_pref)
+    filter(Gender == input$selectedGender_pref, 
+           Age == input$selectedAge_pref, 
+           Occupation == input$selectedOccupation_pref)
+    filteredRaters_pref
+  })
+  
+  filteredMoviesFunc_pref <- reactive({
+    filteredRaters_pref <- filteredRatersFunc_pref()
     
     filteredRatings_pref <- movielensRatingData %>%
       filter(UserID %in% filteredRaters_pref$UserID) %>%
@@ -150,18 +159,22 @@ server <- function(input, output) {
       distinct(MovieID,.keep_all=T) %>%
       filter(count >= input$num_reviews[1],
              count <= input$num_reviews[2]) %>%
-      ggvis(x = ~Year, y = ~meanRating, fill= ~count) %>%
-            layer_points(size := 50, size.hover := 200,
+      ggvis(x = ~Year, y = ~meanRating, fill= ~count, size= ~meanRating) %>%
+            layer_points(size.hover := 300,
                    fillOpacity := 0.2, fillOpacity.hover := 0.5,
                    key := ~MovieID) %>%
       add_tooltip(movie_tooltip_2, "hover") %>%
       add_axis("x", title = "Year") %>%
       add_axis("y", title = "Average movielens rating") %>%
-      set_options(width = 500, height = 500)
+      add_legend(scales = "size", properties = legend_props(legend = list(y = 10)))%>%
+      add_legend(scales = "fill", properties = legend_props(legend = list(y = 100)))%>%
+      set_options(duration = 0, width = 500, height = 500)
       })
   
   vis2 %>% bind_shiny("dynamic_plot_2")
   
+  output$n_movies_pref <- renderText({ nrow(filteredMoviesFunc_pref())})
+  output$n_reviewers_pref <- renderText({ nrow(filteredRatersFunc_pref())})  
   ##############
   
   # input$selectedMinimalScore

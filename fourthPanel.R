@@ -20,12 +20,19 @@ fourthPanel <- tabPanel(
                             selected = sort(unique(movielensUserData$Occupation)[1]))),
       column(3, sliderInput("num_reviews",label=h3("Select minimum number of reviews"),
                             0,
-                            3428,
+                            150,
                             value=c(10,30))),
       
       hr(),
-
+      wellPanel(
+        span("Total umber of different movies reviewd by reviewers :",
+             textOutput("n_movies_pref")),
+        span("Total number of reviewers selected:",
+             textOutput("n_reviewers_pref")),
+        span("Note that graph is a subselection of movies and reviewers based on 'number of reviews per movie'-filter")),
+      hr(),
       ggvisOutput("dynamic_plot_2")
+      
 
     )
   )

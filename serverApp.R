@@ -107,6 +107,63 @@ server <- function(input, output) {
   
   ##############
   
+  filteredMovies_pref <- filmDataPivot
+  filteredMoviesFunc_pref <- reactive({
+    filteredRaters_pref <- movielensUserData %>%
+      filter(Gender == input$selectedGender_pref, Age == input$selectedAge_pref, Occupation == input$selectedOccupation_pref)
+    
+    filteredRatings_pref <- movielensRatingData %>%
+      filter(UserID %in% filteredRaters_pref$UserID) %>%
+      group_by(MovieID) %>%
+      summarize(meanRating=mean(Rating), count=n())# %>%
+      #filter(meanRating >= input$selectedMinimalScore) %>%
+      #arrange(meanRating)
+    
+    filteredMovies_pref <- filmDataPivot %>%
+      filter(MovieID %in% filteredRatings_pref$MovieID)%>%
+      left_join(filteredRatings_pref,by='MovieID')%>%
+      arrange(TitleAndYear) 
+    filteredMovies_pref
+  })
+  
+  movie_tooltip_2 <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.null(x$MovieID)) return(NULL)
+    
+    # Pick out the movie with this ID
+    movie <- filteredMoviesFunc_pref() %>%
+      filter(MovieID==x$MovieID) %>%
+      distinct(MovieID,.keep_all=T)
+      
+    
+    paste0("<b>", movie$TitleAndYear, "</b><br>",
+           "number of reviews ", movie$count,"<br>",
+           "mean rating ", movie$meanRating,"<br>",
+           "budget $", format(movie$budget, big.mark = ",", scientific = FALSE)
+    )
+  }
+  
+  vis2 <- reactive({ 
+    filteredMovies_pref <- filteredMoviesFunc_pref()
+    filteredMovies_pref$Year
+    filteredMovies_pref %>%
+      distinct(MovieID,.keep_all=T) %>%
+      filter(count >= input$num_reviews[1],
+             count <= input$num_reviews[2]) %>%
+      ggvis(x = ~Year, y = ~meanRating, fill= ~count) %>%
+            layer_points(size := 50, size.hover := 200,
+                   fillOpacity := 0.2, fillOpacity.hover := 0.5,
+                   key := ~MovieID) %>%
+      add_tooltip(movie_tooltip_2, "hover") %>%
+      add_axis("x", title = "Year") %>%
+      add_axis("y", title = "Average movielens rating") %>%
+      set_options(width = 500, height = 500)
+      })
+  
+  vis2 %>% bind_shiny("dynamic_plot_2")
+  
+  ##############
+  
   # input$selectedMinimalScore
   # input$selectedGender
   # input$selectedAge

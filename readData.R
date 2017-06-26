@@ -120,7 +120,8 @@ occupation_list <- with(movielens_occupation, split(occupation, text))
 
 
 #####
-IMDBMatchedScripts <- readRDS("data/IMDB/IMDBMatchedScripts.RDS")%>%
+IMDBMatchedScripts <- readRDS("data/IMDB/IMDBMatchedScripts.RDS")
+IMDBMatchedScripts <- IMDBMatchedScripts %>%
   mutate(titlesSmall=tolower(IMDBMatchedScripts$title))
 
 movie_sentiment_springfield <- readRDS("data/springfield/movie_script_sentiment.RDS")

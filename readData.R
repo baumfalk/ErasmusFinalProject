@@ -107,7 +107,6 @@ filmDataNotSpringfieldIMDBTitles <- imdbData[!(imdbData$TitleAndYear %in% spring
 genres <- unique((filmDataInSpringfield %>%
   arrange(Genre))$Genre)
 
-
 movielens_age <- read.csv2("data/movielens/movielens_age.csv", sep=";")
 names(movielens_age) <- c("age","text")
 

@@ -131,7 +131,10 @@ server <- function(input, output) {
     filteredMovies_pref <- filmDataPivot %>%
       filter(MovieID %in% filteredRatings_pref$MovieID)%>%
       left_join(filteredRatings_pref,by='MovieID')%>%
-      arrange(TitleAndYear) 
+      arrange(TitleAndYear) %>%
+      distinct(MovieID,.keep_all=T) %>%
+      filter(count >= input$num_reviews[1],
+             count <= input$num_reviews[2])
     filteredMovies_pref
   })
   
@@ -154,11 +157,8 @@ server <- function(input, output) {
   
   vis2 <- reactive({ 
     filteredMovies_pref <- filteredMoviesFunc_pref()
-    filteredMovies_pref$Year
-    filteredMovies_pref %>%
-      distinct(MovieID,.keep_all=T) %>%
-      filter(count >= input$num_reviews[1],
-             count <= input$num_reviews[2]) %>%
+    
+    filteredMovies_pref  %>%
       ggvis(x = ~Year, y = ~meanRating, fill= ~count, size= ~meanRating) %>%
             layer_points(size.hover := 300,
                    fillOpacity := 0.2, fillOpacity.hover := 0.5,

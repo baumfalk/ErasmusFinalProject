@@ -120,19 +120,38 @@ occupation_list <- with(movielens_occupation, split(occupation, text))
 
 
 #####
-movie_sentiment <- data.frame(text = as.character(SpringfieldMatchedScripts$content),
-                              movie=SpringfieldMatchedScripts$titlesSmall) %>%
-  mutate(text = as.character(text)) %>%
-  unnest_tokens(word, text) %>%
-  inner_join(get_sentiments("nrc"), by="word") %>%
-  count(index = movie, sentiment) %>%
-  spread(sentiment, n, fill = 0) %>%
-  mutate(som_emo = joy + anger + anticipation + disgust + fear + sadness + surprise + trust,
-         som_pos = negative+positive) %>%
-  gather(emotion,value, -index,-som_emo,-som_pos) %>%
-  filter(#value != 0, 
-    emotion != "sentiment") %>%
-  mutate(perc = ifelse(as.character(emotion)== "positive" | as.character(emotion)== "negative",
-                       value/som_pos,value/som_emo)) %>%
-  select(index,emotion,perc) %>%
-  spread(emotion,perc,fill=0)
+IMDBMatchedScripts <- readRDS("data/IMDB/IMDBMatchedScripts.RDS")
+IMDBMatchedScripts <- IMDBMatchedScripts %>%
+  mutate(titlesSmall=tolower(IMDBMatchedScripts$title))
+
+movie_sentiment_springfield <- readRDS("data/springfield/movie_script_sentiment.RDS")
+movie_sentiment_IMDB <- readRDS("data/IMDB/movie_script_sentiment.RDS")
+
+# movie_sentiment_perc <- data.frame(text = as.character(IMDBMatchedScripts$content),
+#                               movie=IMDBMatchedScripts$titlesSmall) %>%
+#   mutate(text = as.character(text)) %>%
+#   unnest_tokens(word, text) %>%
+#   inner_join(get_sentiments("nrc"), by="word") %>%
+#   count(index = movie, sentiment) %>%
+#   spread(sentiment, n, fill = 0) %>%
+#   mutate(som_emo = joy + anger + anticipation + disgust + fear + sadness + surprise + trust,
+#          som_pos = negative+positive) %>%
+#   gather(emotion,value, -index,-som_emo,-som_pos) %>%
+#   filter(#value != 0,
+#     emotion != "sentiment") %>%
+#   mutate(perc = ifelse(as.character(emotion)== "positive" | as.character(emotion)== "negative",
+#                        value/som_pos,value/som_emo)) %>%
+#   select(index,emotion,perc) %>%
+#   spread(emotion,perc,fill=0)
+# 
+# movie_sentiment <- data.frame(text = as.character(IMDBMatchedScripts$content),
+#                                    movie=IMDBMatchedScripts$titlesSmall) %>%
+#   mutate(text = as.character(text)) %>%
+#   unnest_tokens(word, text) %>%
+#   inner_join(get_sentiments("nrc"), by="word") %>%
+#   count(index = movie, sentiment) %>%
+#   spread(sentiment, n, fill = 0) %>%
+#   left_join(movie_sentiment_perc,by='index',suffix=c("_n","_perc"))
+# 
+# saveRDS(movie_sentiment,"movie_script_sentiment.RDS")
+

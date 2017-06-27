@@ -3,6 +3,5 @@ axis_vars <- c(
   "IMDB score" = "imdb_score",
   "Duration (minutes)" = "duration",
   "Budget" = "budget",
-  "Year" = "Year",
-  "Length (minutes)" = "Runtime"
+  "Year" = "Year"
 )

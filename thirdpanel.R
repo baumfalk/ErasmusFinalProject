@@ -27,9 +27,7 @@ thirdPanel <- tabPanel(
                h4("Select axis variables"),
                selectInput("xvar", "X-axis variable", axis_vars, selected = "Year"),
                selectInput("yvar", "Y-axis variable", axis_vars, selected = "budget"),
-               tags$small(paste0(
-                 "Note: Some text."
-               ))
+               tags$small(paste0(""))
              )
       ),
       column(9,

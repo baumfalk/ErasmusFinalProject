@@ -5,25 +5,34 @@ fourthPanel <- tabPanel(
   fluidPage(
     titlePanel("Preference explorer"),
     fluidRow(
-      column(3, wellPanel(
+      column(2, wellPanel(
+                  h4("Filter reviewers"),
                   selectInput("selectedGender_pref",
-                                        label = h3("Select gender"),
+                                        label = "Select gender",
                                         choices = c("Female"= "F","Male"="M"),#sort(unique(movielensUserData$Gender)),
                                         selected = sort(unique(movielensUserData$Gender))[1]),
                   selectInput("selectedAge_pref",
-                            label = h3("Select age"),
+                            label = "Select age",
                             choices = age_list,
                             selected = sort(unique(movielensUserData$Age)[1])),
                   selectInput("selectedOccupation_pref",
-                            label = h3("Select occupation"),
+                            label = "Select occupation",
                             choices = occupation_list,
                             selected = sort(unique(movielensUserData$Occupation)[1])),
                   span("Total number of reviewers selected:",
-             textOutput("n_reviewers_pref"))),
-             sliderInput("num_reviews",label=h3("Select minimum number of reviews"),
+             textOutput("n_reviewers_pref")))),
+      column(2, wellPanel(sliderInput("num_reviews",label=h4("Select number of reviews"),
                             0, 150, value=c(10,30))),
-      column(9,ggvisOutput("dynamic_plot_2"),
-      wellPanel(span("Total umber of different movies reviewd by reviewers :",textOutput("n_movies_pref"))))
+               wellPanel(
+                            h4("Select axis variables"),
+                            selectInput("xvar_2", "X-axis variable", axis_vars, selected = "Year"),
+                            selectInput("yvar_2", "Y-axis variable", axis_vars, selected = "imdb_score"),
+                            tags$small(paste0(""))
+                          )
+                
+            ),
+      column(8,ggvisOutput("dynamic_plot_2"),
+      wellPanel(span("Total number of movies displayed :",textOutput("n_movies_pref"))))
   
     )
   )

@@ -45,8 +45,10 @@ firstPanel <- tabPanel("Recommender",
                           hr(),
                           uiOutput("trailer"),
                           
+                          plotOutput("clickedMovieWordcloud"),
                           plotOutput("clickedMoviePlot"),
                           plotOutput("clickedMoviePlotSentiment"),
+                          plotOutput("clickedMovieRadarPlot"),
                           verbatimTextOutput("clickedMovieText")
                           
                         )

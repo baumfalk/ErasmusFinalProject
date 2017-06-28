@@ -2,6 +2,8 @@
 
 library(ggvis)
 library(shiny)
+library(fmsb)
+
 
 server <- function(input, output) {
   
@@ -14,6 +16,9 @@ server <- function(input, output) {
       filter(Genre == input$selectedGenre)
     ggplot(data=filmData, aes(x=Year,y=budget)) + geom_point()
   })
+  
+  
+  
   output$info <- renderPrint({
     filmData <- filmDataInSpringfield %>%
       filter(Genre == input$selectedGenre)
@@ -93,8 +98,6 @@ server <- function(input, output) {
   })
   
   vis %>% bind_shiny("dynamic_plot")
-  
-  output$n_movies <- renderText({ nrow(movies()) })
   
   
   ##############
@@ -178,22 +181,22 @@ server <- function(input, output) {
  
   # filter de lijst met films aan de hand van gemiddelde score voor users die voldoen aan
   # de drie gevraagde criteria.
-  filteredMovies <- filmDataPivot
   filteredMoviesFunc <- reactive({
-    filteredRaters <- movielensUserData %>%
-      filter(Gender == input$selectedGender, Age == input$selectedAge, Occupation == input$selectedOccupation)
-    
-    filteredRatings <- movielensRatingData %>%
-      filter(UserID %in% filteredRaters$UserID) %>%
-      group_by(MovieID) %>%
-      summarize(meanRating=mean(Rating), count=n()) %>%
-      filter(meanRating >= input$selectedMinimalScore) %>%
-      arrange(meanRating)
-    
-    filteredMovies <- filmDataPivot %>%
-      filter(MovieID %in% filteredRatings$MovieID) %>%
+    # filteredRaters <- movielensUserData %>%
+    #   filter(Gender == input$selectedGender, Age == input$selectedAge, Occupation == input$selectedOccupation)
+    # 
+    # filteredRatings <- movielensRatingData %>%
+    #   filter(UserID %in% filteredRaters$UserID) %>%
+    #   group_by(MovieID) %>%
+    #   summarize(meanRating=mean(Rating), count=n()) %>%
+    #   filter(meanRating >= input$selectedMinimalScore) %>%
+    #   arrange(meanRating)
+    # 
+    # filteredMovies <- filmDataPivot %>%
+    #   filter(MovieID %in% filteredRatings$MovieID) %>%
+    #   arrange(TitleAndYear)
+    filmDataPivot %>%
       arrange(TitleAndYear)
-    filteredMovies
   })
   
   
@@ -243,11 +246,12 @@ server <- function(input, output) {
     sqrt(sum((f1-f2)^2))
   }
   
+  
+  normalize <- function(val,min,max) {
+    (val - min)/(max-min)
+  }
   normalizedMovies <- reactive({
-    normalize <- function(val,min,max) {
-      val <- (val - min)/(max-min)
-    }
-    
+
     first_index <- which(names(filmDataPivot)=="Action")
     final_index <- which(names(filmDataPivot)=="Western")
     # normalize and filter
@@ -263,7 +267,10 @@ server <- function(input, output) {
     distances <- movieDistances[as.character(selectedFilm$MovieID[1]),]
     top20_distances_indexes <- (order(distances))[2:23]
     
-    top20_movies <- movies[top20_distances_indexes,]$TitleAndYear
+    top20_movies <- movies[top20_distances_indexes,]
+    top20_movies$index <- 1:nrow(top20_movies)
+    top20_movies$distances <- sort(distances)[2:23]
+    top20_movies
   }
   
   
@@ -281,21 +288,26 @@ server <- function(input, output) {
     
     # With base graphics, need to tell it what the x and y variables are.
     
-    top20 <- data.frame(titlesSmall = c(top20_1,top20_2, top20_3))
+    top20 <- rbind(top20_1,top20_2,top20_3)
+    top20 <- top20 %>%
+      filter(!(TitleAndYear %in% c(selectedFilm1$TitleAndYear,
+                                 selectedFilm2$TitleAndYear,
+                                 selectedFilm3$TitleAndYear))) %>%
+      group_by(TitleAndYear) %>%
+      summarize(count=n(),
+                meanDistCountAdjusted = mean(distances)/count,
+                MovieID = mean(MovieID)) %>%
+      arrange(meanDistCountAdjusted)
     
-    top20 <- top20 %>% 
-      group_by(titlesSmall) %>%
-      summarise(count = n()) %>%
-      filter(!(titlesSmall %in% c(input$selMovie1, input$selMovie2, input$selMovie3 )))
     
-    
-    subset <- springfieldDataIMDBTitles %>% 
-      inner_join(top20,by=c("titlesSmall"="titlesSmall")) %>% 
-      inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
-      arrange(desc(count),desc(imdb_score)) %>%
-      distinct(titlesSmall) %>%
-      head(n)
-    subset
+    # subset <- springfieldDataIMDBTitles %>% 
+    #   inner_join(top20,by=c("titlesSmall"="TitleAndYear")) %>% 
+    #   inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
+    #   arrange(meanDist) %>%
+    #   distinct(titlesSmall) %>%
+    #   head(n)
+    # subset
+    top20 %>% head(n)
    })
   
   movieSentences <- reactive({
@@ -324,9 +336,8 @@ server <- function(input, output) {
 
   #filmnames <- as.character(sample(filmData$TitleAndYear,n)) %>% iconv("latin1", "ASCII", sub="")
   movieImages <- reactive({
-    subset <- sharedtop20()
+    films <- sharedtop20()
   
-    films <- (filmDataPivot %>% filter(TitleAndYear %in% subset$titlesSmall))
     vals[["filmIDs"]] <- films$MovieID
     binary_images <- list()
     for(i in 1:n) {
@@ -335,8 +346,8 @@ server <- function(input, output) {
       binary_image <- list(list(src = img_file_url,
                                 contentType = "image/jpg",
                                 title = films$TitleAndYear[i],
-                                height="250px")
-      )
+                                height="250px"))
+      print(paste0(films$TitleAndYear[i],binary_image))
       binary_images <- append(binary_images,binary_image)
     }
     binary_images
@@ -397,7 +408,7 @@ server <- function(input, output) {
     list <- reactiveValuesToList(vals)
     id <- vals[["clicked"]]
     selectedMovieID <- list[["filmIDs"]][id]
-    if(is.null(selectedMovieID)) {
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
       return()
     }
     # With base graphics, need to tell it what the x and y variables are.
@@ -439,7 +450,7 @@ server <- function(input, output) {
     list <- reactiveValuesToList(vals)
     id <- vals[["clicked"]]
     selectedMovieID <- list[["filmIDs"]][id]
-    if(is.null(selectedMovieID)) {
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
       return()
     }
     # With base graphics, need to tell it what the x and y variables are.
@@ -477,7 +488,7 @@ server <- function(input, output) {
     list <- reactiveValuesToList(vals)
     id <- vals[["clicked"]]
     selectedMovieID <- list[["filmIDs"]][id]
-    if(is.null(selectedMovieID)) {
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
       return()
     }
     # With base graphics, need to tell it what the x and y variables are.
@@ -497,5 +508,69 @@ server <- function(input, output) {
     print(trailerURL)
     embedURL <- paste0('<iframe width="600" height="300" src="', trailerURL,'" frameborder="0" allowfullscreen></iframe>')
     HTML(embedURL)
+  })
+  
+  output$clickedMovieRadarPlot <- renderPlot({
+    list <- reactiveValuesToList(vals)
+    id <- vals[["clicked"]]
+    selectedMovieID <- list[["filmIDs"]][id]
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
+      return()
+    }
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- (filmDataPivot %>%
+                filter(MovieID == selectedMovieID))[1,]
+  
+    sentiments <- movie_sentiment_IMDB[movie_sentiment_IMDB$index==movie$TitleAndYear,]
+    anger <- sentiments[[12]]
+    anticipation <- sentiments[[13]]
+    disgust <- sentiments[[14]]
+    fear <- sentiments[[15]]
+    joy <- sentiments[[16]]
+    sadness <- sentiments[[19]]
+    surprise <- sentiments[[20]]
+    trust <- sentiments[[21]]
+    
+    whose <- c(movie$TitleAndYear)
+    
+    df2 <- data.frame(anger,anticipation,disgust,fear,joy,sadness,surprise,trust)
+    df2 <- normalize(df2,min(df2),max(df2))
+    rownames(df2) <- whose
+    df2 <- rbind(rep(1,8),rep(0,8),df2)
+    
+    #==================
+    # Plot 2: Same plot with custom features
+    colors_border=c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9) , rgb(0.7,0.5,0.1,0.9) )
+    colors_in=c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4) , rgb(0.7,0.5,0.1,0.4) )
+    radarchart( df2  , axistype=1 , 
+                #custom polygon
+                pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+                #custom the grid
+                cglcol="grey", cglty=1, axislabcol="grey", caxislabels=(0:10), cglwd=0.8,
+                #custom labels
+                vlcex=1.7,
+                seg=10
+    )
+    #legend(x=0.7, y=1, legend = rownames(df2[-c(1,2),]), bty = "n", pch=20 , col=colors_in , text.col = "black", cex=1.2, pt.cex=3)
+    
+  })
+  
+  output$clickedMovieWordcloud <- renderPlot({
+    list <- reactiveValuesToList(vals)
+    id <- vals[["clicked"]]
+    selectedMovieID <- list[["filmIDs"]][id]
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
+      return()
+    }
+    
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- (filmDataPivot %>%
+                filter(MovieID == selectedMovieID))[1,]
+    movieText <- SpringfieldMatchedScripts %>% filter(titlesSmall==movie$TitleAndYear)
+    movieTextTidy <- movieText %>% unnest_tokens(word, content)
+    movieTextTidy %>% 
+      anti_join(stop_words) %>%
+      count(word) %>%
+      with(wordcloud(word,n,max.word=20))
   })
 }

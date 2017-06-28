@@ -45,8 +45,8 @@ print("  done loading movielensdata")
 
 print("  loading imdb data")
 imdbDataRaw <- read.csv("data/imdb/imdbtop5000.csv")
-IMDBMatchedScripts <- readRDS("data/IMDB/IMDBMatchedScripts.RDS")
-movie_sentiment_IMDB <- readRDS("data/IMDB/movie_script_sentiment.RDS")
+IMDBMatchedScripts <- readRDS("data/imdb/IMDBMatchedScripts.rds")
+movie_sentiment_IMDB <- readRDS("data/imdb/movie_script_sentiment.RDS")
 print("  done loading imdb data")
 
 print("  loading springfield data")

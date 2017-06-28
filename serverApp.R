@@ -107,6 +107,82 @@ server <- function(input, output) {
   
   ##############
   
+  filteredMovies_pref <- filmDataPivot
+  filteredRaters_pref <- movielensUserData
+  
+  filteredRatersFunc_pref <- reactive({ 
+    filteredRaters_pref <- movielensUserData %>%
+    filter(Gender == input$selectedGender_pref, 
+           Age == input$selectedAge_pref, 
+           Occupation == input$selectedOccupation_pref)
+    filteredRaters_pref
+  })
+  
+  filteredMoviesFunc_pref <- reactive({
+    filteredRaters_pref <- filteredRatersFunc_pref()
+    
+    filteredRatings_pref <- movielensRatingData %>%
+      filter(UserID %in% filteredRaters_pref$UserID) %>%
+      group_by(MovieID) %>%
+      summarize(meanRating=mean(Rating), count=n())# %>%
+      #filter(meanRating >= input$selectedMinimalScore) %>%
+      #arrange(meanRating)
+    
+    filteredMovies_pref <- filmDataPivot %>%
+      filter(MovieID %in% filteredRatings_pref$MovieID)%>%
+      left_join(filteredRatings_pref,by='MovieID')%>%
+      arrange(TitleAndYear) %>%
+      distinct(MovieID,.keep_all=T) %>%
+      filter(count >= input$num_reviews[1],
+             count <= input$num_reviews[2])
+    filteredMovies_pref
+  })
+  
+  movie_tooltip_2 <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.null(x$MovieID)) return(NULL)
+    
+    # Pick out the movie with this ID
+    movie <- filteredMoviesFunc_pref() %>%
+      filter(MovieID==x$MovieID) %>%
+      distinct(MovieID,.keep_all=T)
+      
+    
+    paste0("<b>", movie$TitleAndYear, "</b><br>",
+           "number of reviews ", movie$count,"<br>",
+           "mean rating ", movie$meanRating,"<br>",
+           "budget $", format(movie$budget, big.mark = ",", scientific = FALSE)
+    )
+  }
+  
+  vis2 <- reactive({
+    xvar_name <- names(axis_vars)[axis_vars == input$xvar_2]
+    yvar_name <- names(axis_vars)[axis_vars == input$yvar_2]
+    
+    xvar <- prop("x", as.symbol(input$xvar_2))
+    yvar <- prop("y", as.symbol(input$yvar_2))
+    
+    filteredMovies_pref <- filteredMoviesFunc_pref()
+    
+    filteredMovies_pref  %>%
+      ggvis(x = xvar, y = yvar, fill= ~count, size= ~meanRating) %>%
+            layer_points(size.hover := 300,
+                   fillOpacity := 0.2, fillOpacity.hover := 0.5,
+                   key := ~MovieID) %>%
+      add_tooltip(movie_tooltip_2, "hover") %>%
+      add_axis("x", title = xvar_name) %>%
+      add_axis("y", title = yvar_name) %>%
+      add_legend(scales = "size", title="Mean movielens rating \n of selected users", properties = legend_props(legend = list(y = 0)))%>%
+      add_legend(scales = "fill",title="Number of reviews", properties = legend_props(legend = list(y = 150)))%>%
+      set_options(duration = 0)
+      })
+  
+  vis2 %>% bind_shiny("dynamic_plot_2")
+  
+  output$n_movies_pref <- renderText({ nrow(filteredMoviesFunc_pref())})
+  output$n_reviewers_pref <- renderText({ nrow(filteredRatersFunc_pref())})  
+  ##############
+  
   # input$selectedMinimalScore
   # input$selectedGender
   # input$selectedAge
@@ -192,7 +268,7 @@ server <- function(input, output) {
     
     #krijg trailer
     urlEncodedTitle <- URLencode(if_else(is.na(movie$TitleAndYear),
-                                         "never gonna give you up",movie$TitleAndYear),
+                                         "dQw4w9WgXcQ",movie$TitleAndYear),
                                  reserved = TRUE)
     
     searchQueryURL<- paste0("https://www.youtube.com/results?search_query=",urlEncodedTitle,"+official+trailer")

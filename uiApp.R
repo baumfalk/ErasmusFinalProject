@@ -99,11 +99,13 @@ secondPanel <- tabPanel(
 )
 
 source("thirdpanel.R")
+source("fourthPanel.R")
 
 
 ui <- 
   navbarPage("Movies that Matter",
              firstPanel,
              secondPanel,
-             thirdPanel
+             thirdPanel,
+             fourthPanel
   )

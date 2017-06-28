@@ -11,6 +11,7 @@ library(tidytext)
 movielensFilmDataRaw <-  read.csv2("data/movielens/movies.csv")
 movielensRatingDataRaw <- read.csv2("data/movielens/ratings.csv")
 movielensUserDataRaw <- read.csv2("data/movielens/users.csv")
+movieDistances  <- readRDS("data/movielens/movieDistances.rds")
 imdbDataRaw <- read.csv("data/imdb/imdbtop5000.csv")
 
 springfieldDataRaw <- read.csv2("data/springfield/urls_titles_springfield.txt")

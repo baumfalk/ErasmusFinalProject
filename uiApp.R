@@ -59,7 +59,9 @@ firstPanel <- tabPanel("Recommender",
                           
                           #verbatimTextOutput("clickedMovieText"),
                           plotOutput("clickedMoviePlot"),
-                          plotOutput("clickedMoviePlotSentiment")
+                          plotOutput("clickedMoviePlotSentiment"),
+                          verbatimTextOutput("clickedMovieText")
+                          
                         )
 )
 

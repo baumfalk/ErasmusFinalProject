@@ -229,7 +229,7 @@ server <- function(input, output) {
   })
   
   top20 <- function(movies,selectedFilm) {
-    distances <- apply(movies[,c(-1,-2,-3,-4)],1,distance,f2=selectedFilm[-c(1,2,3,4)])
+    distances <- movieDistances[as.character(selectedFilm$MovieID[1]),]
     top20_distances_indexes <- (order(distances))[2:23]
     
     top20_movies <- movies[top20_distances_indexes,]$TitleAndYear
@@ -430,22 +430,14 @@ server <- function(input, output) {
   #filmnames <- as.character(sample(filmData$TitleAndYear,n)) %>% iconv("latin1", "ASCII", sub="")
   movieImages <- reactive({
     subset <- sharedtop20()
-    
+  
     filmnames <- subset$titlesSmall
-    makeNiceImageURL <- function(filmname) {
-      url <- paste("https://www.google.nl/search?q=",URLencode(paste(filmname,"movie poster"),reserved=TRUE),"&tbm=isch",sep="")
-    }
-    urls <- sapply(filmnames,makeNiceImageURL)
+    filmIDs <- (filmDataPivot %>% filter(TitleAndYear %in% filmnames))$MovieID
+    
     binary_images <- list()
-    print(getwd())
     for(i in 1:n) {
-      print(paste("URL",i,":",urls[i]))
-      html <- read_html(urls[i])
-      img_url <- (html %>% html_nodes("img") %>% html_attr("src"))[1]
       
-      img_file_url <- tempfile(fileext = ".jpg")
-      download.file(img_url,img_file_url,mode="wb",cacheOK=FALSE)
-      
+      img_file_url <- paste0("data/images/",filmIDs[i],".jpg")
       binary_image <- list(list(src = img_file_url,
                                 contentType = "image/jpg",
                                 title = filmnames[i],
@@ -453,6 +445,7 @@ server <- function(input, output) {
       )
       binary_images <- append(binary_images,binary_image)
       print(paste(i,filmnames[i]))
+      print(binary_image)
     }
     binary_images
   })
@@ -502,14 +495,27 @@ server <- function(input, output) {
       images <- list()
       for(j in 1:nImagesPerRow) {
         img_name <- paste("img",count,sep="")
-        images <- append(images,list(column(2,imageOutput(img_name,height="500px"))))
+        #img_click <- paste("img_","_click",sep="")
+        img_click <- "img_click"
+        images <- append(images,list(column(2,imageOutput(img_name, height="500px",
+                                                          click = img_click))))
         
         count <- count + 1
       }
       rows <- append(rows, list(fluidRow(images)))
     }
     fluidPage(rows)
-    #})
+    
   })
   
+  output$clickedMovieText <- renderPrint({
+    c(input[["img_click"]])
+    #c("HELLO")
+    # filmData <- filmDataInSpringfield %>%
+    #   filter(Genre == input$selectedGenre)
+    # # With base graphics, need to tell it what the x and y variables are.
+    # movie <- nearPoints(filmData, input$handleGenreClick, xvar = "Year", yvar = "budget")[1,]
+    # c(movie$Title,movie$Year)
+    # # nearPoints() also works with hover and dblclick events
+  })
 }

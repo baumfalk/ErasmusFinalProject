@@ -34,7 +34,9 @@ thirdPanel <- tabPanel(
              ggvisOutput("dynamic_plot"),
              wellPanel(
                span("Number of movies selected:",
-                    textOutput("n_movies")
+                    textOutput("n_movies"),
+                    "ID selected movie",
+                    textOutput("selected_MovieID")
                )
              )
       )

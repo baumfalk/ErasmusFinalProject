@@ -5,7 +5,15 @@ library(shiny)
 library(fmsb)
 
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  clicked_value <- reactiveValues() #MovieID = as.integer(1)
+  clicked_value$MovieID <- as.integer(0)
+  movie_click<-function(data, ...){
+    clicked_value$MovieID <- as.integer(data$MovieID)
+    str(clicked_value$MovieID)
+    clicked_value$MovieID
+  }
   
   vals <- reactiveValues()
   n <- 10
@@ -61,7 +69,7 @@ server <- function(input, output) {
            "$", format(movie$budget, big.mark = ",", scientific = FALSE)
     )
   }
-  
+
   # A reactive expression with the ggvis plot
   vis <- reactive({
     # Lables for axes
@@ -79,10 +87,27 @@ server <- function(input, output) {
                  fillOpacity := 0.2, fillOpacity.hover := 0.5,
                  key := ~MovieID) %>%
     add_tooltip(movie_tooltip, "hover") %>%
+    handle_click(movie_click) %>%
     add_axis("x", title = xvar_name) %>%
     add_axis("y", title = yvar_name) %>%
     set_options(width = 500, height = 500)
   })
+
+  #selectedMovieID <- reactive(input$movieSelect)
+  Selected_MovieID <- reactive({ 
+    selection <- clicked_value$MovieID
+    selection })
+    
+  output$selected_MovieID <- renderText({
+      selectedMovieID <- Selected_MovieID()
+      
+      selection <- filmDataPivot %>%
+      filter(MovieID == selectedMovieID) %>%
+      select(MovieID) %>% head(1) 
+      selection$MovieID
+    })
+  output$n_movies <- renderText({ nrow(movies())})
+  
   
   vis %>% bind_shiny("dynamic_plot")
   
@@ -553,4 +578,27 @@ server <- function(input, output) {
       count(word) %>%
       with(wordcloud(word,n,max.word=20))
   })
+  
+  #####
+  
+  output$clickedMovieWordcloud_2 <- renderPlot({
+    list <- reactiveValuesToList(vals)
+    id <- vals[["clicked"]]
+    selectedMovieID <- list[["filmIDs"]][id]
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
+      return()
+    }
+    
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- (filmDataPivot %>%
+                filter(MovieID == selectedMovieID))[1,]
+    
+    movieText <- SpringfieldMatchedScripts %>% filter(titlesSmall==movie$TitleAndYear)
+    movieTextTidy <- movieText %>% unnest_tokens(word, content)
+    movieTextTidy %>% 
+      anti_join(stop_words) %>%
+      count(word) %>%
+      with(wordcloud(word,n,max.word=20))
+  })
+  
 }

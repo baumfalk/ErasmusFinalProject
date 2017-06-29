@@ -147,7 +147,7 @@ movielensRatingDataSummarized <- movielensRatingDataSummarizedGender %>%
 
 
 
-filmDataRated <- filmDataPivotInSpringfield %>%
+filmDataPivotRated <- filmDataPivotInSpringfield %>%
   inner_join(movielensRatingDataSummarized) 
 
 

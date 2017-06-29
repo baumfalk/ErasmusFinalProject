@@ -242,23 +242,40 @@ server <- function(input, output) {
     first_index <- which(names(filmDataPivot)=="Action")
     final_index <- which(names(filmDataPivot)=="Western")
     # normalize and filter
-    movies <- filmDataPivotInSpringfield %>%
-      select(MovieID, Title, Year, TitleAndYear, duration, imdb_score, first_index:final_index) %>%
+    movies <- filmDataPivotRated %>%
       mutate(norm_dur = normalize(duration,min(duration),max(duration)),
              norm_score = normalize(imdb_score,min(imdb_score),max(imdb_score))) %>%
       select(-duration,-imdb_score)
     
   })
   
-  top20 <- function(movies,selectedFilm) {
+  top20 <- function(movies,selectedFilm, Gender, Age, Occupation) {
     distances <- movieDistances[as.character(selectedFilm$MovieID[1]),]
-    top20_distances_indexes <- (order(distances))[2:51]
-    movieIDs <- as.numeric(names(movieDistances[as.character(selectedFilm$MovieID[1]),top20_distances_indexes]))
-    movieIDsDF <- data.frame(num=1:50, MovieID=movieIDs, distances=distances[top20_distances_indexes])
     
-    top20_movies <- movies %>%
-      inner_join(movieIDsDF) %>% 
-      arrange(num) 
+    distances.df <- data.frame(distances,MovieID=as.integer(names(distances)))
+    
+    distances.df <- distances.df %>%
+      inner_join(movies)
+  
+    distances.df[,"meanCategories"] = 
+      (distances.df[,as.character(Gender)] +
+      distances.df[,paste0(Age,"_age")]+
+      distances.df[,paste0(Occupation,"_occ")])/3
+    
+    distances.df[,"distances"] = distances.df[,"distances"] / distances.df[,"meanCategories"]
+   
+    distances.df <- distances.df %>%
+      arrange(distances)
+    
+    
+   # top20_distances_indexes <- (order(distances))[2:51]
+    #movieIDs <- as.numeric(names(movieDistances[as.character(selectedFilm$MovieID[1]),top20_distances_indexes]))
+    #movieIDsDF <- data.frame(num=1:50, MovieID=movieIDs, distances=distances[top20_distances_indexes])
+    
+    #top20_movies <- movies %>%
+     # inner_join(movieIDsDF) %>% 
+      #arrange(num)
+    top20_movies <- distances.df
     top20_movies$index <- 1:nrow(top20_movies)
     top20_movies
   }
@@ -271,10 +288,13 @@ server <- function(input, output) {
     selectedFilm2 <- movies %>% filter(TitleAndYear == input$selMovie2)
     selectedFilm3 <- movies %>% filter(TitleAndYear == input$selMovie3)
     
+    Gender = input$selectedGender
+    Age = input$selectedAge 
+    Occupation = input$selectedOccupation
     
-    top20_1 <- top20(movies,selectedFilm1)
-    top20_2 <- top20(movies,selectedFilm2)
-    top20_3 <- top20(movies,selectedFilm3)
+    top20_1 <- top20(movies, selectedFilm1, Gender, Age, Occupation)
+    top20_2 <- top20(movies, selectedFilm2, Gender, Age, Occupation)
+    top20_3 <- top20(movies, selectedFilm3, Gender, Age, Occupation)
     
     # With base graphics, need to tell it what the x and y variables are.
     

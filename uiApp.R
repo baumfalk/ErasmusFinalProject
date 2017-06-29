@@ -94,7 +94,7 @@ source("fourthPanel.R")
 ui <- 
   navbarPage("Movies that Matter",
              firstPanel,
-             secondPanel,
+            # secondPanel,
              thirdPanel,
              fourthPanel
   )

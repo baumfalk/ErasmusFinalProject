@@ -139,7 +139,7 @@ movielensRatingDataSummarizedOccupation <- movielensRatingData %>%
 
 names(movielensRatingDataSummarizedOccupation)[2:ncol(movielensRatingDataSummarizedOccupation)] <- paste(names(movielensRatingDataSummarizedOccupation)[2:ncol(movielensRatingDataSummarizedOccupation)],"occ", sep = "_")
 
-movielensRatingDataSummarizedOccupation[is.na(movielensRatingDataSummarizedOccupation)] <- 1
+movielensRatingDataSummarizedOccupation[is.na(movielensRatingDataSummarizedOccupation)] <- 3
 
 movielensRatingDataSummarized <- movielensRatingDataSummarizedGender %>%
   inner_join(movielensRatingDataSummarizedAge, by=c("MovieID"="MovieID")) %>%

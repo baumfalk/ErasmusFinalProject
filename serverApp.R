@@ -282,15 +282,16 @@ server <- function(input, output, session) {
     distances.df <- distances.df %>%
       inner_join(movies)
   
-    distances.df[,"meanCategories"] = 
+    distances.df[,"meanCategories"] = 1 -
       (distances.df[,as.character(Gender)] +
       distances.df[,paste0(Age,"_age")]+
-      distances.df[,paste0(Occupation,"_occ")])/3
+      distances.df[,paste0(Occupation,"_occ")])/15
     
-    distances.df[,"distances"] = distances.df[,"distances"] / distances.df[,"meanCategories"]
+    distances.df[,"distances"] = (distances.df[,"distances"] + 0.3*distances.df[,"meanCategories"])
    
     distances.df <- distances.df %>%
-      arrange(distances)
+      arrange(distances) %>% 
+      head(21)
     
     
    # top20_distances_indexes <- (order(distances))[2:51]
@@ -330,9 +331,10 @@ server <- function(input, output, session) {
                                  selectedFilm3$TitleAndYear))) %>%
       group_by(TitleAndYear) %>%
       summarize(count=n(),
-                meanDistCountAdjusted = mean(distances)/count,
+                meanDistCountAdjusted = mean(distances)/(count^3),
                 MovieID = mean(MovieID)) %>%
       arrange(meanDistCountAdjusted)
+  
     top20 %>% head(n)
    })
   

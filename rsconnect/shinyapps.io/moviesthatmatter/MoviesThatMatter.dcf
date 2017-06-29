@@ -3,9 +3,9 @@ title: MoviesThatMatter
 account: moviesthatmatter
 server: shinyapps.io
 appId: 185301
-bundleId: 869787
+bundleId: 885451
 url: https://moviesthatmatter.shinyapps.io/MoviesThatMatter/
-when: 1497619776.76184
+when: 1498665940.27558
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .httr-oauth|data/movielens/.DS_Store

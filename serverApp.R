@@ -287,7 +287,7 @@ server <- function(input, output, session) {
       distances.df[,paste0(Age,"_age")]+
       distances.df[,paste0(Occupation,"_occ")])/15
     
-    distances.df[,"distances"] = (distances.df[,"distances"] + 0.3*distances.df[,"meanCategories"])
+    distances.df[,"distances"] = (distances.df[,"distances"] + 0.5*distances.df[,"meanCategories"])
    
     distances.df <- distances.df %>%
       arrange(distances) %>% 

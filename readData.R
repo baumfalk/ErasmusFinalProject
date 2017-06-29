@@ -109,6 +109,50 @@ filmDataNotSpringfield <- filmDataPivot[!(filmDataPivot$TitleAndYear %in% spring
 filmDataInSpringfield <- filmData[(filmData$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
 filmDataPivotInSpringfield <- filmDataPivot[(filmDataPivot$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
 
+
+#summarize ratings per category
+
+movielensRatingDataSummarizedGender <- movielensRatingData %>%
+  inner_join(movielensUserData) %>%
+  group_by(Gender,MovieID) %>%
+  summarize(GenderRating = mean(Rating)) %>%
+  spread(Gender,GenderRating)
+
+movielensRatingDataSummarizedGender[is.na(movielensRatingDataSummarizedGender)] <- 1
+
+movielensRatingDataSummarizedAge <- movielensRatingData %>%
+  inner_join(movielensUserData) %>%
+  group_by(Age,MovieID) %>%
+  summarize(AgeRating = mean(Rating)) %>%
+  spread(Age,AgeRating)
+
+names(movielensRatingDataSummarizedAge)[2:ncol(movielensRatingDataSummarizedAge)] <- paste(names(movielensRatingDataSummarizedAge)[2:ncol(movielensRatingDataSummarizedAge)],"age", sep = "_")
+
+movielensRatingDataSummarizedAge[is.na(movielensRatingDataSummarizedAge)] <- 1
+
+movielensRatingDataSummarizedOccupation <- movielensRatingData %>%
+  inner_join(movielensUserData) %>%
+  group_by(Occupation,MovieID) %>%
+  summarize(OccupationRating = mean(Rating)) %>%
+  spread(Occupation,OccupationRating) %>%
+  replace_na(list())
+
+names(movielensRatingDataSummarizedOccupation)[2:ncol(movielensRatingDataSummarizedOccupation)] <- paste(names(movielensRatingDataSummarizedOccupation)[2:ncol(movielensRatingDataSummarizedOccupation)],"occ", sep = "_")
+
+movielensRatingDataSummarizedOccupation[is.na(movielensRatingDataSummarizedOccupation)] <- 1
+
+movielensRatingDataSummarized <- movielensRatingDataSummarizedGender %>%
+  inner_join(movielensRatingDataSummarizedAge, by=c("MovieID"="MovieID")) %>%
+  inner_join(movielensRatingDataSummarizedOccupation, by=c("MovieID"="MovieID"))
+
+
+
+filmDataRated <- filmDataPivotInSpringfield %>%
+  inner_join(movielensRatingDataSummarized) 
+
+
+
+
 ##IMDB met sprinfield
 imdbData <- imdbData %>%
   mutate(titlesSmall=tolower(iconv(movie_title_char,"WINDOWS-1252","UTF-8"))) %>%

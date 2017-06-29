@@ -182,7 +182,7 @@ server <- function(input, output) {
     # filteredMovies <- filmDataPivot %>%
     #   filter(MovieID %in% filteredRatings$MovieID) %>%
     #   arrange(TitleAndYear)
-    filmDataPivot %>%
+    filmDataPivotInSpringfield %>%
       arrange(TitleAndYear)
   })
   

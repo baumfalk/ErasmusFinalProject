@@ -622,7 +622,7 @@ server <- function(input, output, session) {
     trailerURL <- getFirstUrlFromSearchQuery(searchQueryURL)
     #geef trailer weer
     print(trailerURL)
-    embedURL <- paste0('<iframe width="600" height="300" src="', trailerURL,'" frameborder="0" allowfullscreen></iframe>')
+    embedURL <- paste0('<iframe width="500" height="250" src="', trailerURL,'" frameborder="0" allowfullscreen></iframe>')
     HTML(embedURL)
   })
   

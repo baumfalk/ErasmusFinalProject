@@ -107,6 +107,7 @@ springfieldData <- springfieldDataRaw[springfieldDataRaw$titlesSmall %in% filmDa
 filmDataNotSpringfield <- filmDataPivot[!(filmDataPivot$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
 
 filmDataInSpringfield <- filmData[(filmData$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
+filmDataPivotInSpringfield <- filmDataPivot[(filmDataPivot$TitleAndYear %in% springfieldDataRaw$titlesSmall),]
 
 ##IMDB met sprinfield
 imdbData <- imdbData %>%

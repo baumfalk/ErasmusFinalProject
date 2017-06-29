@@ -582,9 +582,8 @@ server <- function(input, output, session) {
   #####
   
   output$clickedMovieWordcloud_2 <- renderPlot({
-    list <- reactiveValuesToList(vals)
-    id <- vals[["clicked"]]
-    selectedMovieID <- list[["filmIDs"]][id]
+    list <- reactiveValuesToList(clicked_value)
+    selectedMovieID <- list[["MovieID"]]
     if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
       return()
     }
@@ -599,6 +598,77 @@ server <- function(input, output, session) {
       anti_join(stop_words) %>%
       count(word) %>%
       with(wordcloud(word,n,max.word=20))
+  })
+  
+  output$trailer_2 <- renderUI({
+    #krijg geselecteerde film
+    list <- reactiveValuesToList(clicked_value)
+    selectedMovieID <- list[["MovieID"]]
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
+      return()
+    }
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- (filmDataPivot %>%
+                filter(MovieID == selectedMovieID))[1,]
+    
+    
+    #krijg trailer
+    urlEncodedTitle <- URLencode(if_else(is.na(movie$TitleAndYear),
+                                         "dQw4w9WgXcQ",movie$TitleAndYear),
+                                 reserved = TRUE)
+    
+    searchQueryURL<- paste0("https://www.youtube.com/results?search_query=",urlEncodedTitle,"+official+trailer")
+    
+    trailerURL <- getFirstUrlFromSearchQuery(searchQueryURL)
+    #geef trailer weer
+    print(trailerURL)
+    embedURL <- paste0('<iframe width="600" height="300" src="', trailerURL,'" frameborder="0" allowfullscreen></iframe>')
+    HTML(embedURL)
+  })
+  
+  
+  output$clickedMovieRadarPlot_2 <- renderPlot({
+    list <- reactiveValuesToList(clicked_value)
+    selectedMovieID <- list[["MovieID"]]
+    if(is.null(selectedMovieID) || length(selectedMovieID) == 0) {
+      return()
+    }
+    # With base graphics, need to tell it what the x and y variables are.
+    movie <- (filmDataPivot %>%
+                filter(MovieID == selectedMovieID))[1,]
+    
+    sentiments <- movie_sentiment_IMDB[movie_sentiment_IMDB$index==movie$TitleAndYear,]
+    anger <- sentiments[[12]]
+    anticipation <- sentiments[[13]]
+    disgust <- sentiments[[14]]
+    fear <- sentiments[[15]]
+    joy <- sentiments[[16]]
+    sadness <- sentiments[[19]]
+    surprise <- sentiments[[20]]
+    trust <- sentiments[[21]]
+    
+    whose <- c(movie$TitleAndYear)
+    
+    df2 <- data.frame(anger,anticipation,disgust,fear,joy,sadness,surprise,trust)
+    df2 <- normalize(df2,min(df2),max(df2))
+    rownames(df2) <- whose
+    df2 <- rbind(rep(1,8),rep(0,8),df2)
+    
+    #==================
+    # Plot 2: Same plot with custom features
+    colors_border=c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9) , rgb(0.7,0.5,0.1,0.9) )
+    colors_in=c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4) , rgb(0.7,0.5,0.1,0.4) )
+    radarchart( df2  , axistype=1 , 
+                #custom polygon
+                pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+                #custom the grid
+                cglcol="grey", cglty=1, axislabcol="grey", caxislabels=(0:10), cglwd=0.8,
+                #custom labels
+                vlcex=1.7,
+                seg=10
+    )
+    #legend(x=0.7, y=1, legend = rownames(df2[-c(1,2),]), bty = "n", pch=20 , col=colors_in , text.col = "black", cex=1.2, pt.cex=3)
+    
   })
   
 }

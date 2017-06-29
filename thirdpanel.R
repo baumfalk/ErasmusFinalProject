@@ -33,13 +33,18 @@ thirdPanel <- tabPanel(
       column(9,
              ggvisOutput("dynamic_plot"),
              wellPanel(
-               span("Number of movies selected:",
+                span("Number of movies selected:",
                     textOutput("n_movies"),
                     "ID selected movie",
                     textOutput("selected_MovieID")
-               )
-             )
+                )
+              )
+      )
+    ),
+    fluidRow(
+      column(4, uiOutput("trailer_2")),
+      column(4, plotOutput("clickedMovieWordcloud_2")),
+      column(4, plotOutput("clickedMovieRadarPlot_2"))
       )
     )
-  )
 )

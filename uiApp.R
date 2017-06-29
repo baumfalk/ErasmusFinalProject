@@ -11,10 +11,7 @@ firstPanel <- tabPanel("Recommender",
                           # Sidebar with a slider input for number of bins
                           
                           fluidRow(
-                            column(2, selectInput("selectedMinimalScore",
-                                                  label = h3("Minimal score on movielens (best=5)"),
-                                                  choices = 1:5,
-                                                  selected = 3)),
+                            
                             
                             column(3, offset = 1, selectInput("selectedGender",
                                                               label = h3("Select gender"),

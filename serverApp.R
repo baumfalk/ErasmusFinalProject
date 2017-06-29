@@ -207,7 +207,7 @@ server <- function(input, output, session) {
     # filteredMovies <- filmDataPivot %>%
     #   filter(MovieID %in% filteredRatings$MovieID) %>%
     #   arrange(TitleAndYear)
-    filmDataPivotInSpringfield %>%
+    filmDataPivotRated %>%
       arrange(TitleAndYear)
   })
   
@@ -277,6 +277,7 @@ server <- function(input, output, session) {
   top20 <- function(movies,selectedFilm, Gender, Age, Occupation) {
     distances <- movieDistances[as.character(selectedFilm$MovieID[1]),]
     
+    
     distances.df <- data.frame(distances,MovieID=as.integer(names(distances)))
     
     distances.df <- distances.df %>%
@@ -308,7 +309,7 @@ server <- function(input, output, session) {
   
   
   sharedtop20 <- reactive({
-    movies <- na.omit(normalizedMovies())
+    movies <- normalizedMovies()
     
     selectedFilm1 <- movies %>% filter(TitleAndYear == input$selMovie1)
     selectedFilm2 <- movies %>% filter(TitleAndYear == input$selMovie2)
@@ -321,6 +322,7 @@ server <- function(input, output, session) {
     top20_1 <- top20(movies, selectedFilm1, Gender, Age, Occupation)
     top20_2 <- top20(movies, selectedFilm2, Gender, Age, Occupation)
     top20_3 <- top20(movies, selectedFilm3, Gender, Age, Occupation)
+    
     
     # With base graphics, need to tell it what the x and y variables are.
     

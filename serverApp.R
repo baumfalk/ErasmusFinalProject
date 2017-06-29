@@ -17,19 +17,6 @@ server <- function(input, output) {
     ggplot(data=filmData, aes(x=Year,y=budget)) + geom_point()
   })
   
-  
-  
-  output$info <- renderPrint({
-    filmData <- filmDataInSpringfield %>%
-      filter(Genre == input$selectedGenre)
-    # With base graphics, need to tell it what the x and y variables are.
-    movie <- nearPoints(filmData, input$handleGenreClick, xvar = "Year", yvar = "budget")[1,]
-    c(movie$Title,movie$Year)
-    # nearPoints() also works with hover and dblclick events
-  })
-  
-  
-  
   movies <- reactive({
     # Due to dplyr issue #318, we need temp variables for input values
     minyear <- input$year_explore[1]
@@ -255,7 +242,7 @@ server <- function(input, output) {
     first_index <- which(names(filmDataPivot)=="Action")
     final_index <- which(names(filmDataPivot)=="Western")
     # normalize and filter
-    movies <- filmDataPivot %>%
+    movies <- filmDataPivotInSpringfield %>%
       select(MovieID, Title, Year, TitleAndYear, duration, imdb_score, first_index:final_index) %>%
       mutate(norm_dur = normalize(duration,min(duration),max(duration)),
              norm_score = normalize(imdb_score,min(imdb_score),max(imdb_score))) %>%
@@ -265,17 +252,20 @@ server <- function(input, output) {
   
   top20 <- function(movies,selectedFilm) {
     distances <- movieDistances[as.character(selectedFilm$MovieID[1]),]
-    top20_distances_indexes <- (order(distances))[2:23]
+    top20_distances_indexes <- (order(distances))[2:51]
+    movieIDs <- as.numeric(names(movieDistances[as.character(selectedFilm$MovieID[1]),top20_distances_indexes]))
+    movieIDsDF <- data.frame(num=1:50, MovieID=movieIDs, distances=distances[top20_distances_indexes])
     
-    top20_movies <- movies[top20_distances_indexes,]
+    top20_movies <- movies %>%
+      inner_join(movieIDsDF) %>% 
+      arrange(num) 
     top20_movies$index <- 1:nrow(top20_movies)
-    top20_movies$distances <- sort(distances)[2:23]
     top20_movies
   }
   
   
   sharedtop20 <- reactive({
-    movies <- normalizedMovies()
+    movies <- na.omit(normalizedMovies())
     
     selectedFilm1 <- movies %>% filter(TitleAndYear == input$selMovie1)
     selectedFilm2 <- movies %>% filter(TitleAndYear == input$selMovie2)
@@ -298,15 +288,6 @@ server <- function(input, output) {
                 meanDistCountAdjusted = mean(distances)/count,
                 MovieID = mean(MovieID)) %>%
       arrange(meanDistCountAdjusted)
-    
-    
-    # subset <- springfieldDataIMDBTitles %>% 
-    #   inner_join(top20,by=c("titlesSmall"="TitleAndYear")) %>% 
-    #   inner_join(imdbData,by=c("titlesSmall"="TitleAndYear")) %>%
-    #   arrange(meanDist) %>%
-    #   distinct(titlesSmall) %>%
-    #   head(n)
-    # subset
     top20 %>% head(n)
    })
   
@@ -319,7 +300,6 @@ server <- function(input, output) {
     # With base graphics, need to tell it what the x and y variables are.
     movie <- nearPoints(filmData, input$handleRecMovieClick, xvar = "Year", yvar = "budget")[1,]
     
-    #movie_script <- dat[501,c("content")]
     movie_script <- (SpringfieldMatchedScripts %>%
                        filter(titlesSmall==movie$TitleAndYear))$content
     
